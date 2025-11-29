@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,14 +20,31 @@ export default function LoginPage() {
     setError(null);
     setMessage(null);
 
-    // Placeholder: wire to real login API later
     try {
-      setTimeout(() => {
-        setMessage('Login stub - hook this up to a real auth API later.');
-        setLoading(false);
-      }, 600);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Login failed');
+      } else {
+        setMessage('Login successful');
+
+        const user = data.user as { id?: string; role?: string } | undefined;
+        if (user?.id && user?.role) {
+          if (user.role === 'farmer') {
+            router.push(`/dashboard/farmer?userId=${user.id}`);
+          } else if (user.role === 'supplier') {
+            router.push(`/dashboard/supplier?userId=${user.id}`);
+          }
+        }
+      }
     } catch (err) {
       setError('Something went wrong');
+    } finally {
       setLoading(false);
     }
   }
@@ -47,7 +66,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                 required
               />
             </div>
@@ -57,7 +76,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                 required
               />
             </div>

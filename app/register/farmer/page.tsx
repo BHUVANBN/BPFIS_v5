@@ -14,8 +14,7 @@ export default function RegisterFarmerPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [emailOtp, setEmailOtp] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
+  const [otp, setOtp] = useState('');
   const [otpStage, setOtpStage] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
@@ -38,8 +37,8 @@ export default function RegisterFarmerPage() {
         setUserId(data.userId);
         setMessage('OTP sent to your email and phone. (In dev, check server logs / response.)');
         setOtpStage(true);
-        // For dev convenience you can log OTPs here as well
-        console.log('Dev OTPs:', { emailOtp: data.emailOtp, phoneOtp: data.phoneOtp });
+        // For dev convenience you can log OTP here as well
+        console.log('Dev OTP:', { otp: data.otp });
       }
     } catch (err) {
       setError('Something went wrong');
@@ -60,7 +59,7 @@ export default function RegisterFarmerPage() {
       const res = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, emailOtp, phoneOtp }),
+        body: JSON.stringify({ userId, otp }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -93,7 +92,7 @@ export default function RegisterFarmerPage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -103,7 +102,7 @@ export default function RegisterFarmerPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -113,7 +112,7 @@ export default function RegisterFarmerPage() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -123,7 +122,7 @@ export default function RegisterFarmerPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -142,25 +141,15 @@ export default function RegisterFarmerPage() {
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <p className="text-xs text-[#374151]">
-                Enter the OTPs sent to your email and phone number to verify your account.
+                Enter the OTP sent to your email and phone number to verify your account.
               </p>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">Email OTP</label>
+                <label className="block text-xs font-medium text-[#374151] mb-1">OTP</label>
                 <input
                   type="text"
-                  value={emailOtp}
-                  onChange={(e) => setEmailOtp(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">Phone OTP</label>
-                <input
-                  type="text"
-                  value={phoneOtp}
-                  onChange={(e) => setPhoneOtp(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>

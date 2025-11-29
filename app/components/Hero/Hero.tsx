@@ -1,8 +1,21 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Hero() {
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 bg-[#f7f0de]">
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 bg-[#f7f0de] overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/pexels-tomfisk-1483880.jpg"
+          alt="Lush green farmland seen from above."
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f7f0de]/45 via-[#f7f0de]/25 to-[#f7f0de]/10" />
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#1f3b2c] mb-6 leading-tight">
@@ -28,12 +41,6 @@ export default function Hero() {
             </Link>
           </div>
         </div>
-      </div>
-      
-      <div className="mt-16 md:mt-24 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#1f3b2c]">
-          A New Era of Smart Agriculture
-        </h2>
       </div>
     </section>
   );

@@ -5,7 +5,7 @@ import { User } from '../../../../lib/models/User';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, emailOtp, phoneOtp } = body;
+    const { userId, otp } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -31,26 +31,20 @@ export async function POST(request: Request) {
       );
     }
 
-    if (emailOtp && user.emailOtp !== emailOtp) {
+    if (!otp || (user.emailOtp !== otp && user.phoneOtp !== otp)) {
       return NextResponse.json(
-        { message: 'Invalid email OTP' },
+        { message: 'Invalid OTP' },
         { status: 400 }
       );
     }
 
-    if (phoneOtp && user.phoneOtp && user.phoneOtp !== phoneOtp) {
-      return NextResponse.json(
-        { message: 'Invalid phone OTP' },
-        { status: 400 }
-      );
-    }
-
-    if (emailOtp) {
+    // If OTP matches, verify both channels that use OTP
+    if (user.emailOtp === otp) {
       user.emailVerified = true;
       user.emailOtp = undefined;
     }
 
-    if (phoneOtp && user.phoneOtp) {
+    if (user.phoneOtp === otp) {
       user.phoneVerified = true;
       user.phoneOtp = undefined;
     }

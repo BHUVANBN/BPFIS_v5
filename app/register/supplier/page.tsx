@@ -14,7 +14,7 @@ export default function RegisterSupplierPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [emailOtp, setEmailOtp] = useState('');
+  const [otp, setOtp] = useState('');
   const [otpStage, setOtpStage] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
@@ -37,7 +37,7 @@ export default function RegisterSupplierPage() {
         setUserId(data.userId);
         setMessage('OTP sent to your email. (In dev, check server logs / response.)');
         setOtpStage(true);
-        console.log('Dev OTP:', { emailOtp: data.emailOtp });
+        console.log('Dev OTP:', { otp: data.otp });
       }
     } catch (err) {
       setError('Something went wrong');
@@ -58,7 +58,7 @@ export default function RegisterSupplierPage() {
       const res = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, emailOtp }),
+        body: JSON.stringify({ userId, otp }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -91,7 +91,7 @@ export default function RegisterSupplierPage() {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -101,7 +101,7 @@ export default function RegisterSupplierPage() {
                   type="email"
                   value={businessEmail}
                   onChange={(e) => setBusinessEmail(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -111,7 +111,7 @@ export default function RegisterSupplierPage() {
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -121,7 +121,7 @@ export default function RegisterSupplierPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>
@@ -143,12 +143,12 @@ export default function RegisterSupplierPage() {
                 Enter the OTP sent to your email to verify your account.
               </p>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">Email OTP</label>
+                <label className="block text-xs font-medium text-[#374151] mb-1">OTP</label>
                 <input
                   type="text"
-                  value={emailOtp}
-                  onChange={(e) => setEmailOtp(e.target.value)}
-                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#166534]"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full rounded border border-[#e5e7eb] bg-[#fdf6e9] px-3 py-2 text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#166534]"
                   required
                 />
               </div>

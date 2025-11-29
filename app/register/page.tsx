@@ -39,10 +39,13 @@ export default function RegisterPage() {
                 </ul>
               </div>
               <div className="mt-6">
-                <button className="w-full inline-flex items-center justify-center rounded-md bg-[#166534] px-4 py-2 text-sm font-medium text-white hover:bg-[#14532d] transition-colors">
+                <Link
+                  href="/register/farmer"
+                  className="w-full inline-flex items-center justify-center rounded-md bg-[#166534] px-4 py-2 text-sm font-medium text-white hover:bg-[#14532d] transition-colors"
+                >
                   Register
                   <span className="ml-2 text-lg leading-none">→</span>
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -69,10 +72,13 @@ export default function RegisterPage() {
                 </ul>
               </div>
               <div className="mt-6">
-                <button className="w-full inline-flex items-center justify-center rounded-md bg-[#f97316] px-4 py-2 text-sm font-medium text-white hover:bg-[#ea580c] transition-colors">
+                <Link
+                  href="/register/supplier"
+                  className="w-full inline-flex items-center justify-center rounded-md bg-[#f97316] px-4 py-2 text-sm font-medium text-white hover:bg-[#ea580c] transition-colors"
+                >
                   I'm a Supplier
                   <span className="ml-2 text-lg leading-none">→</span>
-                </button>
+                </Link>
               </div>
             </div>
           </div>

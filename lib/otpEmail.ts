@@ -26,10 +26,15 @@ export async function sendEmailOtp(to: string, otp: string, purpose: string) {
   const subject = `Your AgriLink OTP for ${purpose}`;
   const text = `Your AgriLink OTP is ${otp}. It is valid for 10 minutes.`;
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-  });
+  try {
+    await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text,
+    });
+    console.log('OTP email sent to', to);
+  } catch (err) {
+    console.error('Failed to send OTP email', err);
+  }
 }

@@ -32,8 +32,7 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const emailOtp = generateOtp();
-    const phoneOtp = generateOtp();
+    const otp = generateOtp();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const user = await User.create({
@@ -44,20 +43,22 @@ export async function POST(request: Request) {
       passwordHash,
       emailVerified: false,
       phoneVerified: false,
-      emailOtp,
-      phoneOtp,
+      emailOtp: otp,
+      phoneOtp: otp,
       otpExpiresAt,
     });
 
     // Fire-and-forget OTP delivery
-    void sendEmailOtp(user.email, emailOtp, 'farmer registration');
+    void sendEmailOtp(user.email, otp, 'farmer registration');
     if (user.phone) {
-      void sendSmsOtp(user.phone, phoneOtp, 'farmer registration');
+      void sendSmsOtp(user.phone, otp, 'farmer registration');
     }
 
     return NextResponse.json({
       message: 'Farmer registered. Verify OTP to activate account.',
       userId: user._id,
+      // For local debugging, also include OTP in the response.
+      otp,
     });
   } catch (error) {
     console.error('register-farmer error', error);
