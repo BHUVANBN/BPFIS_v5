@@ -206,7 +206,7 @@ export default function OrdersPage() {
                 placeholder="Search by order number, customer name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600"
               />
             </div>
             <button
@@ -281,7 +281,7 @@ export default function OrdersPage() {
                           {order.customer.phone}
                         </div>
                         <div className="text-xs text-[#6b7280]">
-                          {order.customer.city}, {order.customer.state}
+                          {order.customer.address.city}, {order.customer.address.state}
                         </div>
                       </div>
                     </td>
@@ -320,7 +320,7 @@ export default function OrdersPage() {
                         {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned' && (
                           <select
                             onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                            className="text-xs border border-[#e2d4b7] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1f3b2c]"
+                            className="text-xs border border-[#e2d4b7] rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1f3b2c] text-gray-700"
                             defaultValue=""
                           >
                             <option value="" disabled>Update</option>

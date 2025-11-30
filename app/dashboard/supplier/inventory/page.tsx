@@ -229,7 +229,7 @@ export default function InventoryPage() {
                   placeholder="Type product name or SKU..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 />
               </div>
 
@@ -241,7 +241,7 @@ export default function InventoryPage() {
                   id="selectedProduct"
                   value={selectedProduct}
                   onChange={(e) => setSelectedProduct(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                   required
                 >
                   <option value="">Choose a product...</option>
@@ -263,7 +263,7 @@ export default function InventoryPage() {
                   min="0"
                   value={updateQuantity}
                   onChange={(e) => setUpdateQuantity(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                   placeholder="Enter new quantity"
                   required
                 />
@@ -277,7 +277,7 @@ export default function InventoryPage() {
                   id="updateReason"
                   value={updateReason}
                   onChange={(e) => setUpdateReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 >
                   <option value="manual">Manual Update</option>
                   <option value="restock">Restock</option>

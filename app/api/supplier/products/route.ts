@@ -115,7 +115,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    // Handle FormData (for file uploads)
+    const contentType = request.headers.get('content-type');
+    let body;
+    
+    if (contentType && contentType.includes('multipart/form-data')) {
+      // Handle FormData with file uploads
+      const formData = await request.formData();
+      
+      // Extract form fields
+      body = {
+        name: formData.get('name'),
+        sku: formData.get('sku'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        price: formData.get('price'),
+        stockQuantity: formData.get('stockQuantity'),
+        reorderThreshold: formData.get('reorderThreshold'),
+        tags: JSON.parse(formData.get('tags') as string || '[]'),
+        dimensions: JSON.parse(formData.get('dimensions') as string || '{}'),
+        images: [] as string[]
+      };
+      
+      // Handle image files
+      const imageFiles = formData.getAll('images') as File[];
+      console.log('Received image files:', imageFiles.length);
+      
+      // For now, just log the files - in production, you'd upload to cloud storage
+      // and store the URLs in the images array
+      
+    } else {
+      // Handle regular JSON (no file uploads)
+      body = await request.json();
+    }
+
     const {
       name,
       sku,
@@ -195,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     await product.save();
 
-    console.log(' Product created:', { id: product._id, sku, name });
+    console.log('✅ Product created:', { id: product._id, sku, name });
 
     return NextResponse.json({
       message: 'Product created successfully',
@@ -203,7 +236,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error(' Error creating product:', error);
+    console.error('❌ Error creating product:', error);
     
     // Handle duplicate key errors
     if (error instanceof Error && 'code' in error && error.code === 11000) {

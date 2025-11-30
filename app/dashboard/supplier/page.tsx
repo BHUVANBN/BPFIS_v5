@@ -50,18 +50,58 @@ export default function SupplierDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load dashboard stats
-      const statsResponse = await fetch('/api/supplier/dashboard/stats', {
-        headers: {
-          'x-seller-id': 'temp-seller-id' // TODO: Get from auth
-        }
-      });
+      setLoading(true);
+      
+      // For development, check localStorage first for completed setup
+      const localProfile = localStorage.getItem('sellerProfile');
+      if (!localProfile) {
+        // No local profile found, check API
+        const profileResponse = await fetch('/api/seller', {
+          headers: {
+            'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+          }
+        });
 
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          
+          // If setup is needed, redirect to setup page
+          if (profileData.needsSetup) {
+            window.location.href = '/dashboard/supplier/setup';
+            return;
+          }
+        }
+      }
+
+      // Load dashboard data
+      const [statsRes, ordersRes, lowStockRes, topProductsRes] = await Promise.all([
+        fetch('/api/supplier/dashboard/stats', {
+          headers: {
+            'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+          }
+        }),
+        fetch('/api/supplier/dashboard/recent-orders', {
+          headers: {
+            'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+          }
+        }),
+        fetch('/api/supplier/dashboard/low-stock', {
+          headers: {
+            'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+          }
+        }),
+        fetch('/api/supplier/dashboard/top-products', {
+          headers: {
+            'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+          }
+        })
+      ]);
+
+      // Handle stats response
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
         setStats(statsData);
-      } else if (statsResponse.status === 404) {
-        // No seller found, show empty state
+      } else {
         setStats({
           totalRevenue: 0,
           totalOrders: 0,
@@ -72,49 +112,45 @@ export default function SupplierDashboard() {
         });
       }
 
-      // Load recent orders
-      const ordersResponse = await fetch('/api/supplier/dashboard/recent-orders', {
-        headers: {
-          'x-seller-id': 'temp-seller-id'
-        }
-      });
-
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
+      // Handle recent orders response
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
         setRecentOrders(ordersData.orders || []);
-      } else if (ordersResponse.status === 404) {
+      } else {
         setRecentOrders([]);
       }
 
-      // Load low stock products
-      const stockResponse = await fetch('/api/supplier/dashboard/low-stock', {
-        headers: {
-          'x-seller-id': 'temp-seller-id'
-        }
-      });
-
-      if (stockResponse.ok) {
-        const stockData = await stockResponse.json();
-        setLowStockProducts(stockData.products || []);
-      } else if (stockResponse.status === 404) {
+      // Handle low stock response
+      if (lowStockRes.ok) {
+        const lowStockData = await lowStockRes.json();
+        setLowStockProducts(lowStockData.products || []);
+      } else {
         setLowStockProducts([]);
       }
 
-      // Load top products
-      const productsResponse = await fetch('/api/supplier/dashboard/top-products', {
-        headers: {
-          'x-seller-id': 'temp-seller-id'
-        }
-      });
-
-      if (productsResponse.ok) {
-        const productsData = await productsResponse.json();
-        setTopProducts(productsData.products || []);
-      } else if (productsResponse.status === 404) {
+      // Handle top products response
+      if (topProductsRes.ok) {
+        const topProductsData = await topProductsRes.json();
+        setTopProducts(topProductsData.products || []);
+      } else {
         setTopProducts([]);
       }
+
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      
+      // Set empty states on error
+      setStats({
+        totalRevenue: 0,
+        totalOrders: 0,
+        activeProducts: 0,
+        avgOrderValue: 0,
+        revenueGrowth: 0,
+        orderGrowth: 0
+      });
+      setRecentOrders([]);
+      setLowStockProducts([]);
+      setTopProducts([]);
       setError('Failed to load dashboard data');
     } finally {
       setLoading(false);

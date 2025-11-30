@@ -16,6 +16,11 @@ interface SellerProfile {
     country: string;
   };
   gstNumber?: string;
+  businessDetails?: {
+    businessType: string;
+    yearsInOperation: string;
+    productCategories: string;
+  };
   avatarUrl?: string;
   verificationStatus: 'pending' | 'verified' | 'rejected';
   documents: {
@@ -34,6 +39,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isUsingLocalStorage, setIsUsingLocalStorage] = useState(false);
   
   const [formData, setFormData] = useState({
     companyName: '',
@@ -46,7 +52,12 @@ export default function ProfilePage() {
       pincode: '',
       country: 'India'
     },
-    gstNumber: ''
+    gstNumber: '',
+    businessDetails: {
+      businessType: '',
+      yearsInOperation: '',
+      productCategories: ''
+    }
   });
 
   useEffect(() => {
@@ -55,17 +66,89 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     try {
+      // Always try API first, only use localStorage as fallback
       const response = await fetch('/api/seller', {
         headers: {
           'x-seller-id': 'temp-seller-id' // TODO: Get from auth
         }
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.seller && !data.needsSetup) {
+          // Use API data
+          setProfile(data.seller);
+          setIsUsingLocalStorage(false);
+          setFormData({
+            companyName: data.seller.companyName || '',
+            email: data.seller.email || '',
+            phone: data.seller.phone || '',
+            address: data.seller.address || {
+              street: '',
+              city: '',
+              state: '',
+              pincode: '',
+              country: 'India'
+            },
+            gstNumber: data.seller.gstNumber || '',
+            businessDetails: data.seller.businessDetails || {
+              businessType: '',
+              yearsInOperation: '',
+              productCategories: ''
+            }
+          });
+          return;
+        }
+      }
+
+      // Fallback to localStorage only if API fails or needs setup
+      const localProfile = localStorage.getItem('sellerProfile');
+      if (localProfile) {
+        const profileData = JSON.parse(localProfile);
+        setProfile(profileData);
+        setIsUsingLocalStorage(true); // Set flag for localStorage usage
+        setFormData({
+          companyName: profileData.companyName || '',
+          email: profileData.email || '',
+          phone: profileData.phone || '',
+          address: profileData.address || {
+            street: '',
+            city: '',
+            state: '',
+            pincode: '',
+            country: 'India'
+          },
+          gstNumber: profileData.gstNumber || '',
+          businessDetails: profileData.businessDetails || {
+            businessType: '',
+            yearsInOperation: '',
+            productCategories: ''
+          }
+        });
+        setLoading(false);
+        return;
+      }
+
+      const saveResponse = await fetch('/api/seller', {
+        headers: {
+          'x-seller-id': 'temp-seller-id' // TODO: Get from auth
+        }
+      });
+
+      if (!saveResponse.ok) {
         throw new Error('Failed to load profile');
       }
 
-      const data = await response.json();
+      const data = await saveResponse.json();
+      
+      // Check if setup is needed
+      if (data.needsSetup) {
+        // Redirect to setup page
+        window.location.href = '/dashboard/supplier/setup';
+        return;
+      }
+      
       const profileData = data.seller;
       
       setProfile(profileData);
@@ -80,7 +163,12 @@ export default function ProfilePage() {
           pincode: '',
           country: 'India'
         },
-        gstNumber: profileData.gstNumber || ''
+        gstNumber: profileData.gstNumber || '',
+        businessDetails: profileData.businessDetails || {
+          businessType: '',
+          yearsInOperation: '',
+          productCategories: ''
+        }
       });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -90,7 +178,14 @@ export default function ProfilePage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // For development: Add a way to clear profile data
+  const clearProfileData = () => {
+    localStorage.removeItem('sellerProfile');
+    setIsUsingLocalStorage(false); // Reset the flag
+    window.location.reload();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     if (name.includes('.')) {
@@ -130,6 +225,15 @@ export default function ProfilePage() {
       if (response.ok) {
         setSuccess('Profile updated successfully!');
         setEditing(false);
+        
+        // For development, save to localStorage
+        const updatedProfile = {
+          ...profile,
+          ...formData,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem('sellerProfile', JSON.stringify(updatedProfile));
+        
         await loadProfile(); // Reload profile
       } else {
         setError(data.error || 'Failed to update profile');
@@ -167,6 +271,28 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
+      {/* Development Mode Indicator - Only show when using localStorage */}
+      {isUsingLocalStorage && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
+                Development Mode - Profile loaded from localStorage
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                This is for testing purposes. In production, data will be loaded from the database.
+              </p>
+            </div>
+            <button
+              onClick={clearProfileData}
+              className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-1 rounded border border-yellow-300"
+            >
+              Clear Profile Data
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -228,7 +354,7 @@ export default function ProfilePage() {
                       required
                       value={formData.companyName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                     />
                   </div>
 
@@ -243,7 +369,7 @@ export default function ProfilePage() {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                     />
                   </div>
 
@@ -258,7 +384,7 @@ export default function ProfilePage() {
                       required
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                     />
                   </div>
 
@@ -272,8 +398,80 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.gstNumber}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                     />
+                  </div>
+                </div>
+
+                {/* Business Details */}
+                <div>
+                  <label className="block text-sm font-medium text-[#1f3b2c] mb-2">
+                    Business Details
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label htmlFor="businessType" className="block text-xs font-medium text-[#6b7280] mb-1">
+                        Business Type
+                      </label>
+                      <select
+                        id="businessType"
+                        name="businessDetails.businessType"
+                        value={formData.businessDetails.businessType}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      >
+                        <option value="">Select business type</option>
+                        <option value="individual">Individual Farmer</option>
+                        <option value="partnership">Partnership Firm</option>
+                        <option value="proprietary">Proprietary Firm</option>
+                        <option value="private-limited">Private Limited Company</option>
+                        <option value="public-limited">Public Limited Company</option>
+                        <option value="cooperative">Cooperative Society</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="yearsInOperation" className="block text-xs font-medium text-[#6b7280] mb-1">
+                        Years in Operation
+                      </label>
+                      <select
+                        id="yearsInOperation"
+                        name="businessDetails.yearsInOperation"
+                        value={formData.businessDetails.yearsInOperation}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      >
+                        <option value="">Select years</option>
+                        <option value="0-1">Less than 1 year</option>
+                        <option value="1-3">1-3 years</option>
+                        <option value="3-5">3-5 years</option>
+                        <option value="5-10">5-10 years</option>
+                        <option value="10+">More than 10 years</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="productCategories" className="block text-xs font-medium text-[#6b7280] mb-1">
+                        Primary Product Categories
+                      </label>
+                      <select
+                        id="productCategories"
+                        name="businessDetails.productCategories"
+                        value={formData.businessDetails.productCategories}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      >
+                        <option value="">Select category</option>
+                        <option value="seeds">Seeds & Planting Material</option>
+                        <option value="fertilizers">Fertilizers & Nutrients</option>
+                        <option value="pesticides">Pesticides & Crop Protection</option>
+                        <option value="machinery">Farm Machinery & Equipment</option>
+                        <option value="irrigation">Irrigation Systems</option>
+                        <option value="animal-feed">Animal Feed & Supplements</option>
+                        <option value="organic">Organic Farming Products</option>
+                        <option value="multiple">Multiple Categories</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -289,7 +487,7 @@ export default function ProfilePage() {
                       value={formData.address.street}
                       onChange={handleInputChange}
                       placeholder="Street Address"
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                     />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <input
@@ -299,7 +497,7 @@ export default function ProfilePage() {
                         value={formData.address.city}
                         onChange={handleInputChange}
                         placeholder="City"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                       />
                       <input
                         name="address.state"
@@ -308,7 +506,7 @@ export default function ProfilePage() {
                         value={formData.address.state}
                         onChange={handleInputChange}
                         placeholder="State"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                       />
                       <input
                         name="address.pincode"
@@ -317,7 +515,7 @@ export default function ProfilePage() {
                         value={formData.address.pincode}
                         onChange={handleInputChange}
                         placeholder="Pincode"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                       />
                     </div>
                   </div>
@@ -360,6 +558,24 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm font-medium text-[#6b7280]">GST Number</p>
                     <p className="text-[#1f3b2c]">{profile.gstNumber || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#6b7280] mb-2">Business Details</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs text-[#6b7280]">Business Type</p>
+                      <p className="text-[#1f3b2c]">{profile.businessDetails?.businessType || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#6b7280]">Years in Operation</p>
+                      <p className="text-[#1f3b2c]">{profile.businessDetails?.yearsInOperation || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#6b7280]">Product Categories</p>
+                      <p className="text-[#1f3b2c]">{profile.businessDetails?.productCategories || 'Not specified'}</p>
+                    </div>
                   </div>
                 </div>
 

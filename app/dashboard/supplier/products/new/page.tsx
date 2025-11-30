@@ -32,8 +32,9 @@ export default function NewProductPage() {
       height: ''
     },
     
-    // Images (will be handled separately)
-    images: [] as string[]
+    // Images
+    images: [] as string[],
+    imageFiles: [] as File[]
   });
 
   const categories = [
@@ -66,34 +67,107 @@ export default function NewProductPage() {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const validFiles = files.filter(file => validTypes.includes(file.type));
+    
+    if (validFiles.length !== files.length) {
+      setError('Only JPEG, PNG, WebP, and GIF images are allowed');
+      return;
+    }
+    
+    // Validate file size (max 5MB per file)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = validFiles.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setError('Each image must be smaller than 5MB');
+      return;
+    }
+    
+    // Create preview URLs
+    const imageUrls = validFiles.map(file => URL.createObjectURL(file));
+    
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...imageUrls],
+      imageFiles: [...prev.imageFiles, ...validFiles]
+    }));
+    
+    setError('');
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      const newFiles = prev.imageFiles.filter((_, i) => i !== index);
+      
+      // Revoke object URL to avoid memory leaks
+      if (prev.images[index]) {
+        URL.revokeObjectURL(prev.images[index]);
+      }
+      
+      return {
+        ...prev,
+        images: newImages,
+        imageFiles: newFiles
+      };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
 
+    // Validate at least one image is uploaded
+    if (formData.images.length === 0) {
+      setError('Please upload at least one product image');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const payload = {
-        ...formData,
-        price: parseFloat(formData.price),
-        stockQuantity: parseInt(formData.stockQuantity),
-        reorderThreshold: parseInt(formData.reorderThreshold),
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        dimensions: {
-          ...formData.dimensions,
-          length: parseFloat(formData.dimensions.length) || undefined,
-          width: parseFloat(formData.dimensions.width) || undefined,
-          height: parseFloat(formData.dimensions.height) || undefined
-        }
+      // Create FormData for file upload
+      const formPayload = new FormData();
+      
+      // Add all form fields
+      formPayload.append('name', formData.name);
+      formPayload.append('sku', formData.sku);
+      formPayload.append('category', formData.category);
+      formPayload.append('description', formData.description);
+      formPayload.append('price', formData.price);
+      formPayload.append('stockQuantity', formData.stockQuantity);
+      formPayload.append('reorderThreshold', formData.reorderThreshold);
+      
+      // Add tags as JSON string
+      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      formPayload.append('tags', JSON.stringify(tagsArray));
+      
+      // Add dimensions as JSON string
+      const dimensionsData = {
+        ...formData.dimensions,
+        length: parseFloat(formData.dimensions.length) || undefined,
+        width: parseFloat(formData.dimensions.width) || undefined,
+        height: parseFloat(formData.dimensions.height) || undefined
       };
+      formPayload.append('dimensions', JSON.stringify(dimensionsData));
+      
+      // Add image files
+      formData.imageFiles.forEach((file, index) => {
+        formPayload.append(`images`, file);
+      });
 
       const response = await fetch('/api/supplier/products', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'x-seller-id': 'temp-seller-id' // TODO: Get from auth
         },
-        body: JSON.stringify(payload)
+        body: formPayload // Send FormData instead of JSON
       });
 
       const data = await response.json();
@@ -160,7 +234,7 @@ export default function NewProductPage() {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="Enter product name"
               />
             </div>
@@ -176,7 +250,7 @@ export default function NewProductPage() {
                 required
                 value={formData.sku}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="PROD-001"
               />
             </div>
@@ -191,7 +265,7 @@ export default function NewProductPage() {
                 required
                 value={formData.category}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
@@ -212,7 +286,7 @@ export default function NewProductPage() {
                 type="text"
                 value={formData.tags}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="organic, premium, bestseller (comma separated)"
               />
             </div>
@@ -229,9 +303,77 @@ export default function NewProductPage() {
               rows={4}
               value={formData.description}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               placeholder="Describe your product in detail..."
             />
+          </div>
+        </div>
+
+        {/* Product Images */}
+        <div className="bg-white border border-[#e2d4b7] rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-[#1f3b2c] mb-6">Product Images</h2>
+          
+          <div className="space-y-4">
+            {/* Upload Area */}
+            <div className="border-2 border-dashed border-[#e2d4b7] rounded-lg p-6 text-center hover:border-[#1f3b2c] transition-colors">
+              <input
+                type="file"
+                id="image-upload"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <label
+                htmlFor="image-upload"
+                className="cursor-pointer inline-flex items-center space-x-2 text-[#1f3b2c] hover:text-[#2d4a3a]"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span className="font-medium">Upload Images</span>
+              </label>
+              <p className="text-sm text-gray-500 mt-2">
+                JPEG, PNG, WebP, or GIF (max 5MB per file)
+              </p>
+            </div>
+
+            {/* Image Preview Grid */}
+            {formData.images.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {formData.images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image}
+                      alt={`Product image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-[#e2d4b7]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      {index === 0 ? 'Primary' : `Image ${index + 1}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {formData.images.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p>No images uploaded yet</p>
+                <p className="text-sm">Upload at least one product image</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -253,7 +395,7 @@ export default function NewProductPage() {
                 step="0.01"
                 value={formData.price}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0.00"
               />
             </div>
@@ -270,7 +412,7 @@ export default function NewProductPage() {
                 min="0"
                 value={formData.stockQuantity}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0"
               />
             </div>
@@ -287,7 +429,7 @@ export default function NewProductPage() {
                 min="0"
                 value={formData.reorderThreshold}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="5"
               />
             </div>
@@ -311,7 +453,7 @@ export default function NewProductPage() {
                 step="0.01"
                 value={formData.weight}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0.00"
               />
             </div>
@@ -328,7 +470,7 @@ export default function NewProductPage() {
                 step="0.01"
                 value={formData.dimensions.length}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0.00"
               />
             </div>
@@ -345,7 +487,7 @@ export default function NewProductPage() {
                 step="0.01"
                 value={formData.dimensions.width}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0.00"
               />
             </div>
@@ -362,7 +504,7 @@ export default function NewProductPage() {
                 step="0.01"
                 value={formData.dimensions.height}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
                 placeholder="0.00"
               />
             </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard/supplier', current: true },
@@ -22,12 +22,22 @@ export default function SupplierLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === '/dashboard/supplier') {
       return pathname === href;
     }
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = () => {
+    // Clear any auth tokens or session data
+    localStorage.removeItem('sellerToken');
+    localStorage.removeItem('sellerInfo');
+    
+    // Redirect to login page
+    router.push('/login');
   };
 
   return (
@@ -86,11 +96,6 @@ export default function SupplierLayout({
               </Link>
             ))}
           </nav>
-          <div className="border-t border-[#e2d4b7] p-4">
-            <button className="w-full flex items-center justify-center px-4 py-2 border border-[#e2d4b7] text-sm font-medium text-[#1f3b2c] rounded-md hover:bg-[#f9fafb]">
-              Logout
-            </button>
-          </div>
         </div>
       </div>
 
@@ -122,12 +127,18 @@ export default function SupplierLayout({
             {/* Right side - My Profile and Logout buttons */}
             <div className="flex items-center space-x-3">
               {/* My Profile button */}
-              <button className="px-4 py-2 text-sm font-medium text-[#1f3b2c] border border-[#e2d4b7] rounded-md hover:bg-[#f9fafb] transition-colors">
+              <button 
+                onClick={() => router.push('/dashboard/supplier/profile')}
+                className="px-4 py-2 text-sm font-medium text-[#1f3b2c] border border-[#e2d4b7] rounded-md hover:bg-[#f9fafb] transition-colors"
+              >
                 My Profile
               </button>
 
               {/* Logout button */}
-              <button className="px-4 py-2 text-sm font-medium text-white bg-[#1f3b2c] rounded-md hover:bg-[#2d4a3a] transition-colors">
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium text-white bg-[#1f3b2c] rounded-md hover:bg-[#2d4a3a] transition-colors"
+              >
                 Logout
               </button>
             </div>

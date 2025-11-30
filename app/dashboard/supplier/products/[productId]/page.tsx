@@ -238,7 +238,7 @@ export default function EditProductPage() {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -253,7 +253,7 @@ export default function EditProductPage() {
                 required
                 value={formData.sku}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -267,7 +267,7 @@ export default function EditProductPage() {
                 required
                 value={formData.category}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
@@ -287,7 +287,7 @@ export default function EditProductPage() {
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               >
                 <option value="draft">Draft</option>
                 <option value="active">Active</option>
@@ -307,7 +307,7 @@ export default function EditProductPage() {
               rows={4}
               value={formData.description}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
             />
           </div>
 
@@ -321,7 +321,7 @@ export default function EditProductPage() {
               type="text"
               value={formData.tags}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               placeholder="organic, premium, bestseller (comma separated)"
             />
           </div>
@@ -345,7 +345,7 @@ export default function EditProductPage() {
                 step="0.01"
                 value={formData.price}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -361,7 +361,7 @@ export default function EditProductPage() {
                 min="0"
                 value={formData.stockQuantity}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -377,7 +377,7 @@ export default function EditProductPage() {
                 min="0"
                 value={formData.reorderThreshold}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
           </div>
@@ -400,7 +400,7 @@ export default function EditProductPage() {
                 step="0.01"
                 value={formData.weight}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -416,7 +416,7 @@ export default function EditProductPage() {
                 step="0.01"
                 value={formData.dimensions.length}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -432,7 +432,7 @@ export default function EditProductPage() {
                 step="0.01"
                 value={formData.dimensions.width}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
 
@@ -448,7 +448,7 @@ export default function EditProductPage() {
                 step="0.01"
                 value={formData.dimensions.height}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
               />
             </div>
           </div>

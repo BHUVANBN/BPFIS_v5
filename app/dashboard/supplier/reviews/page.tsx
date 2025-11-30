@@ -225,7 +225,7 @@ export default function ReviewsPage() {
             placeholder="Search reviews by customer name, product, or content..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+            className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600"
           />
         </div>
 
@@ -301,7 +301,7 @@ export default function ReviewsPage() {
                           value={responseText}
                           onChange={(e) => setResponseText(e.target.value)}
                           placeholder="Write your response to this review..."
-                          className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent"
+                          className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600"
                           rows={3}
                         />
                         <div className="flex items-center justify-end space-x-2 mt-3">

@@ -199,7 +199,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.companyName}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
 
@@ -214,7 +214,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
 
@@ -229,7 +229,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
 
@@ -243,7 +243,7 @@ export default function SupplierRegisterPage() {
                     type="text"
                     value={formData.gstNumber}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
               </div>
@@ -263,7 +263,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.address.street}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
 
@@ -279,7 +279,7 @@ export default function SupplierRegisterPage() {
                       required
                       value={formData.address.city}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                     />
                   </div>
 
@@ -294,7 +294,7 @@ export default function SupplierRegisterPage() {
                       required
                       value={formData.address.state}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                     />
                   </div>
 
@@ -309,7 +309,7 @@ export default function SupplierRegisterPage() {
                       required
                       value={formData.address.pincode}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
 
@@ -345,7 +345,7 @@ export default function SupplierRegisterPage() {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                   />
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function SupplierRegisterPage() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="Enter 6-digit OTP"
-                  className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md shadow-sm focus:outline-none focus:ring-[#1f3b2c] focus:border-[#1f3b2c] sm:text-sm"
+                  className="mt-1 block w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 sm:text-sm"
                 />
               </div>
 
