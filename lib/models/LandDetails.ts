@@ -24,7 +24,7 @@ export interface ILandDetails extends Document {
       longitude: number;
       order: number;
     }>;
-    totalArea?: number; // calculated area in square meters
+    landSizeInAcres?: number; // land size from RTC document in acres
     geojson?: string; // GeoJSON string
   };
 
@@ -71,7 +71,7 @@ const LandDetailsSchema = new Schema<ILandDetails>(
         longitude: { type: Number, required: true },
         order: { type: Number, required: true }
       }],
-      totalArea: { type: Number },
+      landSizeInAcres: { type: Number },
       geojson: { type: String }
     },
 

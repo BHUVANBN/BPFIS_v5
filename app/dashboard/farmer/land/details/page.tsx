@@ -21,6 +21,67 @@ export default function LandDetailsPage() {
   const [saveMessage, setSaveMessage] = useState<string>('');
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
+  // Load saved land data from localStorage on component mount
+  useEffect(() => {
+    const savedLandData = localStorage.getItem('landDetailsData');
+    if (savedLandData) {
+      try {
+        const parsedData = JSON.parse(savedLandData);
+        setLandData(parsedData);
+        
+        // If we have saved data, restore it to the farmland tool when it initializes
+        setTimeout(() => {
+          if ((window as any).restoreLandData) {
+            (window as any).restoreLandData(parsedData);
+          }
+        }, 1000); // Give time for the farmland tool to initialize
+      } catch (error) {
+        console.error('Error parsing saved land data:', error);
+      }
+    }
+  }, []);
+
+  // Save land data to localStorage whenever it changes
+  useEffect(() => {
+    if (landData) {
+      localStorage.setItem('landDetailsData', JSON.stringify(landData));
+    }
+  }, [landData]);
+
+  // Save sketch image to localStorage whenever it changes
+  useEffect(() => {
+    if (sketchImage) {
+      // Convert file to base64 for localStorage storage
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        localStorage.setItem('landSketchImage', reader.result as string);
+      };
+      reader.readAsDataURL(sketchImage);
+    }
+  }, [sketchImage]);
+
+  // Load saved sketch image from localStorage on component mount
+  useEffect(() => {
+    const savedImage = localStorage.getItem('landSketchImage');
+    if (savedImage) {
+      try {
+        // Convert base64 back to file
+        const base64Data = savedImage.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+        const file = new File([blob], 'restored-sketch.jpg', { type: 'image/jpeg' });
+        setSketchImage(file);
+      } catch (error) {
+        console.error('Error restoring sketch image:', error);
+      }
+    }
+  }, []);
+
   // Get current logged-in user
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -28,21 +89,32 @@ export default function LandDetailsPage() {
         const response = await fetch('/api/auth/me'); // Assuming you have an auth endpoint
         if (response.ok) {
           const userData = await response.json();
-          if (userData.user && userData.user._id) {
-            setUserId(userData.user._id);
-            console.log('Current user ID:', userData.user._id);
+          console.log('Auth response:', userData);
+          
+          // Check for both possible ID fields (id or _id)
+          const userId = userData.user?.id || userData.user?._id;
+          
+          if (userId) {
+            setUserId(userId);
+            console.log('Current user ID:', userId);
           } else {
-            console.error('No user ID found in auth response');
+            console.error('No user ID found in auth response:', userData);
           }
         } else {
           // Fallback: try to get from KYC endpoint which should have user info
           const kycResponse = await fetch('/api/farmer/kyc');
           if (kycResponse.ok) {
             const kycData = await kycResponse.json();
+            console.log('KYC response:', kycData);
+            
             if (kycData.profile && kycData.profile.user) {
               setUserId(kycData.profile.user);
               console.log('User ID from KYC:', kycData.profile.user);
+            } else {
+              console.error('No user ID found in KYC response:', kycData);
             }
+          } else {
+            console.error('Both auth and KYC endpoints failed');
           }
         }
       } catch (error) {
@@ -65,13 +137,35 @@ export default function LandDetailsPage() {
     setSaveMessage('');
 
     try {
-      const formData = new FormData();
-      formData.append('userId', userId);
-      formData.append('centroidLatitude', computedData.centroidLatitude.toString());
-      formData.append('centroidLongitude', computedData.centroidLongitude.toString());
-      formData.append('sideLengths', JSON.stringify(computedData.sideLengths));
-      formData.append('vertices', JSON.stringify(computedData.vertices));
-      formData.append('geojson', geojsonString);
+        // Fetch RTC data from user's profile to get land extent
+        let rtcExtent = '';
+        try {
+          const kycResponse = await fetch('/api/farmer/kyc');
+          if (kycResponse.ok) {
+            const kycData = await kycResponse.json();
+            console.log('KYC response data:', kycData);
+            rtcExtent = kycData.profile?.totalCultivableArea || '';
+            console.log('RTC extent found:', rtcExtent);
+          }
+        } catch (error) {
+          console.error('Error fetching RTC data:', error);
+        }
+
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('centroidLatitude', computedData.centroidLatitude.toString());
+        formData.append('centroidLongitude', computedData.centroidLongitude.toString());
+        formData.append('sideLengths', JSON.stringify(computedData.sideLengths));
+        formData.append('vertices', JSON.stringify(computedData.vertices));
+        formData.append('geojson', geojsonString);
+        
+        // Include RTC extent for land size calculation
+        if (rtcExtent) {
+          formData.append('extent', rtcExtent);
+          console.log('Including RTC extent in save:', rtcExtent);
+        } else {
+          console.log('No RTC extent found, land size will not be calculated');
+        }
       
       if (sketchImage) {
         formData.append('sketchImage', sketchImage);
@@ -407,8 +501,6 @@ export default function LandDetailsPage() {
       for(let i=0;i<geoSideLengths.length;i++){
         out += `Side ${i+1}: ${geoSideLengths[i].toFixed(2)} m\n`;
       }
-      out += `\nTotal Area: ${totalArea.toFixed(2)} square meters\n`;
-      out += `Total Area: ${(totalArea / 4046.86).toFixed(4)} acres\n`; // Convert to acres
       out += `\nCentroid: ${latC.toFixed(7)}, ${lonC.toFixed(7)}\n`;
       outPre.textContent = out;
 
@@ -440,11 +532,101 @@ export default function LandDetailsPage() {
 
       // Call the save function from component scope
       (window as any).saveLandDetails?.(computedData, JSON.stringify(geojson));
+      
+      // IMPORTANT: Do not clear any form data after save
+      // Keep all inputs, canvas, and computed results visible
+      // The user can continue working or make adjustments if needed
     });
 
     // initial help
     outPre.textContent = "Steps:\\n1. Upload sketch image.\\n2. Click polygon vertices in order (anticlockwise or clockwise).\\n3. Click 'Complete Polygon'.\\n4. Enter centroid (lat,lon).\\n5. Click 'Compute Coordinates'.";
     drawCanvas();
+
+    // Make restoreLandData available globally
+    (window as any).restoreLandData = (savedData: LandData) => {
+      // Restore centroid inputs
+      if (inLat && savedData.centroidLatitude) {
+        inLat.value = savedData.centroidLatitude.toString();
+      }
+      if (inLon && savedData.centroidLongitude) {
+        inLon.value = savedData.centroidLongitude.toString();
+      }
+      
+      // Restore output display
+      if (outPre && savedData.vertices && savedData.sideLengths) {
+        let out = 'Vertices (lat, lon):\n';
+        for(let i = 0; i < savedData.vertices.length; i++){
+          out += `${i+1}: ${savedData.vertices[i].latitude.toFixed(7)}, ${savedData.vertices[i].longitude.toFixed(7)}\n`;
+        }
+        out += `\nCalculated Side Lengths (meters):\n`;
+        for(let i = 0; i < savedData.sideLengths.length; i++){
+          out += `Side ${i+1}: ${savedData.sideLengths[i].toFixed(2)} m\n`;
+        }
+        out += `\nCentroid: ${savedData.centroidLatitude.toFixed(7)}, ${savedData.centroidLongitude.toFixed(7)}\n`;
+        out += `\n\n(Restored from previous session)`;
+        outPre.textContent = out;
+      }
+      
+      // Restore map if we have GeoJSON
+      if (savedData.geojson && map && parcelLayer) {
+        try {
+          const geojson = JSON.parse(savedData.geojson);
+          if (parcelLayer) {
+            map.removeLayer(parcelLayer);
+          }
+          parcelLayer = L.geoJSON(geojson, { style: { color: '#e63946', weight: 2, fillOpacity: 0.25 } }).addTo(map);
+          
+          // Add centroid marker
+          if (savedData.centroidLatitude && savedData.centroidLongitude) {
+            L.circleMarker([savedData.centroidLatitude, savedData.centroidLongitude], { 
+              radius: 5, 
+              color: 'blue', 
+              fill: true, 
+              fillColor: 'blue' 
+            }).addTo(map);
+          }
+          
+          map.fitBounds(parcelLayer.getBounds());
+        } catch (error) {
+          console.error('Error restoring map data:', error);
+        }
+      }
+    };
+
+    // Try to restore saved data if available
+    const savedLandData = localStorage.getItem('landDetailsData');
+    const savedImage = localStorage.getItem('landSketchImage');
+    
+    if (savedLandData) {
+      try {
+        const parsedData = JSON.parse(savedLandData);
+        setTimeout(() => {
+          (window as any).restoreLandData(parsedData);
+        }, 500); // Small delay to ensure map is ready
+      } catch (error) {
+        console.error('Error restoring saved land data:', error);
+      }
+    }
+    
+    // Restore sketch image if available
+    if (savedImage) {
+      try {
+        const restoredImg = new Image();
+        restoredImg.onload = function () {
+          if (!restoredImg) return;
+          // resize canvas to keep reasonable size, but preserve aspect
+          const maxW = 520;
+          const scale = Math.min(maxW / restoredImg.width, 1);
+          canvas.width = Math.round(restoredImg.width * scale);
+          canvas.height = Math.round(restoredImg.height * scale);
+          img = restoredImg; // Set the global img variable
+          drawCanvas();
+        };
+        restoredImg.src = savedImage;
+      } catch (error) {
+        console.error('Error restoring sketch image:', error);
+      }
+    }
   };
 
   return (

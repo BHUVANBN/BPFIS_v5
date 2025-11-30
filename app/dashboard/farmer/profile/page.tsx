@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function FarmerProfilePage() {
   const [profile, setProfile] = useState<any | null>(null);
-  const [landDetails, setLandDetails] = useState<any[]>([]);
+  const [landDetails, setLandDetails] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -34,14 +34,29 @@ export default function FarmerProfilePage() {
   useEffect(() => {
     async function loadLandDetails() {
       try {
-        // Get userId from localStorage or URL
-        const userId = localStorage.getItem('userId') || new URLSearchParams(window.location.search).get('userId');
-        if (!userId) return;
-
-        const res = await fetch(`/api/farmer/land-details?userId=${userId}`);
-        const data = await res.json();
-        if (res.ok) {
-          setLandDetails(data.data || []);
+        // Get current logged-in user ID
+        const authResponse = await fetch('/api/auth/me');
+        if (authResponse.ok) {
+          const userData = await authResponse.json();
+          const userId = userData.user?.id || userData.user?._id;
+          
+          if (userId) {
+            const res = await fetch(`/api/farmer/land-details?userId=${userId}`);
+            const data = await res.json();
+            if (res.ok) {
+              setLandDetails(data.data && data.data.length > 0 ? data.data[0] : null);
+            }
+          }
+        } else {
+          // Fallback to localStorage if auth fails
+          const userId = localStorage.getItem('userId') || new URLSearchParams(window.location.search).get('userId');
+          if (userId) {
+            const res = await fetch(`/api/farmer/land-details?userId=${userId}`);
+            const data = await res.json();
+            if (res.ok) {
+              setLandDetails(data.data && data.data.length > 0 ? data.data[0] : null);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load land details:', err);
@@ -133,106 +148,159 @@ export default function FarmerProfilePage() {
           </section>
 
           {/* Mapped Land Details Section */}
-          {landDetails.length > 0 && (
-            <section className="bg-[#fffaf1] border border-[#e2d4b7] rounded-lg p-6 space-y-4">
-              <h2 className="text-sm font-semibold text-[#1f3b2c] mb-4">Mapped Land Details</h2>
-              {landDetails.map((land, index) => (
-                <div key={land._id} className="border border-[#e2d4b7] rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-[#1f3b2c">Land Parcel #{index + 1}</h3>
-                    <span className={`px-2 py-1 rounded-full text-[11px] ${
-                      land.processingStatus === 'completed' ? 'bg-green-100 text-green-800' : 
-                      land.processingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {land.processingStatus === 'completed' ? '✅ Mapped' : 
-                       land.processingStatus === 'pending' ? '⏳ Pending' : 
-                       '❌ Failed'}
-                    </span>
-                  </div>
-
-                  {/* Land Sketch Image */}
-                  {land.sketchImage && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-[#1f3b2c]">Land Sketch</h4>
-                      <img 
-                        src={land.sketchImage.path} 
-                        alt="Land Sketch" 
-                        className="w-full max-w-xs h-auto border border-[#e2d4b7] rounded-lg"
-                      />
-                    </div>
-                  )}
-
-                  {/* RTC Details */}
-                  {land.rtcDetails && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="text-[#1f3b2c]">
-                        <span className="font-semibold">Survey Number: </span>
-                        {land.rtcDetails.surveyNumber || '—'}
-                      </div>
-                      <div className="text-[#1f3b2c]">
-                        <span className="font-semibold">Extent: </span>
-                        {land.rtcDetails.extent ? `${land.rtcDetails.extent} acres` : '—'}
-                      </div>
-                      <div className="text-[#1f3b2c]">
-                        <span className="font-semibold">Location: </span>
-                        {land.rtcDetails.location || '—'}
-                      </div>
-                      <div className="text-[#1f3b2c]">
-                        <span className="font-semibold">Soil Type: </span>
-                        {land.rtcDetails.soilType || '—'}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Geographic Coordinates */}
-                  {land.landData && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-[#1f3b2c]">Geographic Coordinates</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[#1f3b2c]">
-                        <div>
-                          <span className="font-semibold">Centroid: </span>
-                          {land.landData.centroidLatitude?.toFixed(7)}, {land.landData.centroidLongitude?.toFixed(7)}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Total Area: </span>
-                          {land.landData.totalArea ? `${land.landData.totalArea.toFixed(2)} sq.m` : '—'}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Vertices: </span>
-                          {land.landData.vertices?.length || 0} points
-                        </div>
-                        <div>
-                          <span className="font-semibold">Side Lengths: </span>
-                          {land.landData.sideLengths?.length || 0} sides
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Download GeoJSON */}
-                  {land.landData?.geojson && (
-                    <div className="pt-2">
-                      <button
-                        onClick={() => {
-                          const blob = new Blob([land.landData.geojson], { type: 'application/json' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `land-parcel-${index + 1}.geojson`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
-                        className="inline-flex items-center rounded-md bg-[#166534] px-3 py-1 text-xs font-medium text-white hover:bg-[#14532d]"
-                      >
-                        Download GeoJSON
-                      </button>
-                    </div>
-                  )}
+          <section className="bg-[#fffaf1] border border-[#e2d4b7] rounded-lg p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-[#1f3b2c]">Mapped Land Details</h2>
+              <button
+                onClick={() => router.push('/dashboard/farmer/land/details')}
+                className="inline-flex items-center rounded-md bg-[#166534] px-3 py-1 text-xs font-medium text-white hover:bg-[#14532d]"
+              >
+                Map New Land
+              </button>
+            </div>
+            
+            {landDetails ? (
+              <div className="border border-[#e2d4b7] rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-[#1f3b2c">Land Details</h3>
+                  <span className={`px-2 py-1 rounded-full text-[11px] ${
+                    landDetails.processingStatus === 'completed' ? 'bg-green-100 text-green-800' : 
+                    landDetails.processingStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {landDetails.processingStatus === 'completed' ? '✅ Mapped' : 
+                     landDetails.processingStatus === 'pending' ? '⏳ Pending' : 
+                     '❌ Failed'}
+                  </span>
                 </div>
-              ))}
-            </section>
-          )}
+
+                {/* Land Sketch Image */}
+                {landDetails.sketchImage && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-[#1f3b2c]">Land Sketch</h4>
+                    <img 
+                      src={landDetails.sketchImage.path} 
+                      alt="Land Sketch" 
+                      className="w-full max-w-xs h-auto border border-[#e2d4b7] rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* RTC Details */}
+                {landDetails.rtcDetails && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="text-[#1f3b2c]">
+                      <span className="font-semibold">Survey Number: </span>
+                      {landDetails.rtcDetails.surveyNumber || '—'}
+                    </div>
+                    <div className="text-[#1f3b2c]">
+                      <span className="font-semibold">Extent: </span>
+                      {landDetails.rtcDetails.extent ? `${landDetails.rtcDetails.extent} acres` : '—'}
+                    </div>
+                    <div className="text-[#1f3b2c]">
+                      <span className="font-semibold">Location: </span>
+                      {landDetails.rtcDetails.location || '—'}
+                    </div>
+                    <div className="text-[#1f3b2c]">
+                      <span className="font-semibold">Soil Type: </span>
+                      {landDetails.rtcDetails.soilType || '—'}
+                    </div>
+                  </div>
+                )}
+
+                {/* Geographic Coordinates */}
+                {landDetails.landData && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-[#1f3b2c]">Geographic Coordinates</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[#1f3b2c]">
+                      <div>
+                        <span className="font-semibold">Centroid: </span>
+                        {landDetails.landData.centroidLatitude?.toFixed(7)}, {landDetails.landData.centroidLongitude?.toFixed(7)}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Land Size: </span>
+                        {landDetails.landData.landSizeInAcres ? (
+                          <>
+                            {landDetails.landData.landSizeInAcres.toFixed(2)} acres
+                          </>
+                        ) : '—'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Vertices: </span>
+                        {landDetails.landData.vertices?.length || 0} points
+                      </div>
+                      <div>
+                        <span className="font-semibold">Side Lengths: </span>
+                        {landDetails.landData.sideLengths?.length || 0} sides
+                      </div>
+                    </div>
+
+                    {/* Show calculated side lengths */}
+                    {landDetails.landData.sideLengths && landDetails.landData.sideLengths.length > 0 && (
+                      <div className="mt-2">
+                        <span className="font-semibold text-[#1f3b2c]">Calculated Side Lengths:</span>
+                        <div className="text-[#1f3b2c] text-xs mt-1">
+                          {landDetails.landData.sideLengths.map((length: number, index: number) => (
+                            <span key={index} className="inline-block mr-2 mb-1">
+                              Side {index + 1}: {length.toFixed(2)}m
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show vertices coordinates */}
+                    {landDetails.landData.vertices && landDetails.landData.vertices.length > 0 && (
+                      <div className="mt-2">
+                        <span className="font-semibold text-[#1f3b2c]">Vertex Coordinates:</span>
+                        <div className="text-[#1f3b2c] text-xs mt-1 max-h-24 overflow-y-auto">
+                          {landDetails.landData.vertices
+                            .sort((a: any, b: any) => a.order - b.order)
+                            .map((vertex: any, index: number) => (
+                              <div key={index} className="mr-2 mb-1">
+                                {vertex.order}: {vertex.latitude.toFixed(7)}, {vertex.longitude.toFixed(7)}
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Download GeoJSON */}
+                {landDetails.landData?.geojson && (
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        const blob = new Blob([landDetails.landData.geojson], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `land-parcel.geojson`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="inline-flex items-center rounded-md bg-[#166534] px-3 py-1 text-xs font-medium text-white hover:bg-[#14532d]"
+                    >
+                      Download GeoJSON
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-[#6b7280] mb-4">
+                  No mapped land details found. Use the land mapping tool to convert your land sketches to geographic coordinates.
+                </p>
+                <button
+                  onClick={() => router.push('/dashboard/farmer/land/details')}
+                  className="inline-flex items-center rounded-md bg-[#166534] px-4 py-2 text-xs font-medium text-white hover:bg-[#14532d]"
+                >
+                  Start Land Mapping
+                </button>
+              </div>
+            )}
+          </section>
 
           <section className="bg-[#fffaf1] border border-[#e2d4b7] rounded-lg p-6 space-y-3">
             <h2 className="text-sm font-semibold text-[#1f3b2c] mb-2">Uploaded Documents</h2>
