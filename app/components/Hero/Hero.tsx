@@ -1,18 +1,44 @@
-import Link from 'next/link';
+'use client';
+
+import { useState, useEffect } from 'react';
 
 export default function Hero() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Unsplash farmland aerial images
+  const images = [
+    'https://images.unsplash.com/photo-1475084124271-aebaf8a67166?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1455106429120-62f655f62f83?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1529511582893-2d7e684dd128?q=80&w=1933&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://plus.unsplash.com/premium_photo-1726313836390-8b1e86742c98?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1658900283889-798f1cf0ea0b?q=80&w=2072&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1615129825073-c47c67bdec5b?q=80&w=1994&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
   return (
     <section className="relative pt-80 pb-64 md:pt-96 md:pb-96 overflow-hidden">
-      {/* Background image */}
+      {/* Background images with crossfade */}
       <div className="absolute inset-0 -z-10">
-        <div 
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/pexels-tomfisk-1483880.jpg')`,
-            filter: 'blur(2px)'
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-transparent" />
+        {images.map((image, index) => (
+          <div
+            key={index}
+            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+            style={{
+              backgroundImage: `url('${image}')`,
+              filter: 'blur(0px)',
+              opacity: currentImageIndex === index ? 1 : 0
+            }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/70" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,18 +52,18 @@ export default function Hero() {
             and a comprehensive marketplace for all agricultural needs.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
+            <a 
               href="/marketplace" 
               className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#d97706] hover:bg-[#b45309] md:py-4 md:text-lg md:px-10 transition-colors"
             >
               Explore the Marketplace
-            </Link>
-            <Link 
+            </a>
+            <a 
               href="/register" 
               className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-[#166534] bg-[#dcfce7] hover:bg-[#bbf7d0] md:py-4 md:text-lg md:px-10 transition-colors"
             >
               Register
-            </Link>
+            </a>
           </div>
         </div>
       </div>
