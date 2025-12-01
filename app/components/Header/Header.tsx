@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Link2 } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -22,71 +22,90 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    // We don't have real session handling yet; simply navigate back to home.
     router.push('/');
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-[#f7f0de]/95 backdrop-blur-sm z-50 border-b border-[#e2d4b7]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white/90 backdrop-blur-md z-40 border-b border-[#e5e7eb] shadow-sm rounded-lg mx-4 mt-4">
+      <div className="px-6">
         <div className="flex justify-between items-center h-16">
+          {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href={isDashboard ? (isFarmer ? buildDashboardHref('/dashboard/farmer') : isSupplier ? buildDashboardHref('/dashboard/supplier') : '/') : '/'} className="flex items-center">
-              <span className="text-2xl font-bold text-[#1f3b2c]">AgriLink</span>
+            <Link 
+              href={isDashboard ? (isFarmer ? buildDashboardHref('/dashboard/farmer') : isSupplier ? buildDashboardHref('/dashboard/supplier') : '/') : '/'} 
+              className="flex items-center gap-2 group"
+            >
+              <div className="flex items-center justify-center">
+                <Link2 className="w-6 h-6 text-[#166534] rotate-45" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-[#166534] to-[#15803d] bg-clip-text text-transparent">
+                AgriLink
+              </span>
             </Link>
           </div>
 
+          {/* Public Navigation */}
           {!isDashboard && (
-            <nav className="hidden md:ml-6 md:flex md:items-center md:space-x-8">
-              <Link href="/#features" className="text-[#374151] hover:text-[#166534] px-3 py-2 text-sm font-medium">
+            <nav className="hidden md:ml-6 md:flex md:items-center md:space-x-2">
+              <Link 
+                href="/#features" 
+                className="text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              >
                 Features
               </Link>
-              <Link href="/login" className="text-[#374151] hover:text-[#166534] px-3 py-2 text-sm font-medium">
+              <Link 
+                href="/login" 
+                className="text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              >
                 Log In
               </Link>
               <Link
                 href="/register"
-                className="ml-4 bg-[#166534] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#14532d] transition-colors"
+                className="ml-2 bg-gradient-to-r from-[#166534] to-[#15803d] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:shadow-lg hover:scale-105 transition-all"
               >
                 Register
               </Link>
-              <button className="ml-2 p-2 text-[#374151] hover:text-[#166534]">
+              <button className="ml-2 p-2.5 text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] rounded-lg transition-all">
                 <ShoppingCart className="h-5 w-5" />
               </button>
             </nav>
           )}
 
+          {/* Dashboard Navigation */}
           {isDashboard && (
-            <nav className="hidden md:ml-6 md:flex md:items-center md:space-x-6">
-              <span className="text-sm font-semibold text-[#1f3b2c]">
-                {isFarmer && 'Farmer Dashboard'}
-                {isSupplier && 'Supplier Dashboard'}
-                {!isFarmer && !isSupplier && 'Dashboard'}
-              </span>
+            <nav className="hidden md:ml-6 md:flex md:items-center md:space-x-3">
+              {/* Dashboard Badge */}
+              <div className="px-4 py-2 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] rounded-lg border border-[#bbf7d0]">
+                <span className="text-sm font-semibold text-[#166534]">
+                  {isFarmer && '🌾 Farmer Dashboard'}
+                  {isSupplier && '📦 Supplier Dashboard'}
+                  {!isFarmer && !isSupplier && 'Dashboard'}
+                </span>
+              </div>
 
               {isFarmer && (
-                <>
-                  <Link
-                    href={buildDashboardHref('/dashboard/farmer/profile')}
-                    className="text-[#374151] hover:text-[#166534] px-3 py-2 text-sm font-medium"
-                  >
-                    My Profile
-                  </Link>
-                </>
+                <Link
+                  href={buildDashboardHref('/dashboard/farmer/profile')}
+                  className="flex items-center gap-2 text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                >
+                  <User className="h-4 w-4" />
+                  My Profile
+                </Link>
               )}
 
               {isSupplier && (
                 <>
                   <Link
                     href={buildDashboardHref('/dashboard/supplier')}
-                    className="text-[#374151] hover:text-[#166534] px-3 py-2 text-sm font-medium"
+                    className="text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   >
                     Overview
                   </Link>
                   <Link
                     href={buildDashboardHref('/dashboard/supplier')}
-                    className="text-[#374151] hover:text-[#166534] px-3 py-2 text-sm font-medium"
+                    className="flex items-center gap-2 text-[#374151] hover:text-[#166534] hover:bg-[#f0fdf4] px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   >
+                    <User className="h-4 w-4" />
                     My Profile
                   </Link>
                 </>
@@ -94,8 +113,9 @@ export default function Header() {
 
               <button
                 onClick={handleLogout}
-                className="ml-4 bg-[#166534] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#14532d] transition-colors"
+                className="ml-2 flex items-center gap-2 bg-gradient-to-r from-[#dc2626] to-[#b91c1c] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:shadow-lg hover:scale-105 transition-all"
               >
+                <LogOut className="h-4 w-4" />
                 Logout
               </button>
             </nav>
