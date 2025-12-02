@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const lat = searchParams.get('lat');
+  const lon = searchParams.get('lon');
+
+  if (!lat || !lon) {
+    return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 });
+  }
+
+  console.log('Getting location for coordinates:', lat, lon);
+
   try {
-    const { searchParams } = new URL(request.url);
-    const lat = searchParams.get('lat');
-    const lon = searchParams.get('lon');
-
-    if (!lat || !lon) {
-      return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 });
-    }
-
-    console.log('Getting location for coordinates:', lat, lon);
 
     // Reverse Geocoding → Convert coordinates to location name (using format=jsonv2)
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
