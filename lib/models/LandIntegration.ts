@@ -56,6 +56,15 @@ export interface ILandIntegration extends Document {
     userAgent: string;
   }>;
   executionDate?: Date;
+  // Blockchain fields
+  blockchain?: {
+    agreementId?: string;
+    contractAddress?: string;
+    deployedAt?: Date;
+    transactionHash?: string;
+    isImmutable?: boolean;
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,7 +127,16 @@ const LandIntegrationSchema = new Schema<ILandIntegration>({
     ipAddress: { type: String, required: true },
     userAgent: { type: String, required: true }
   }],
-  executionDate: { type: Date }
+  executionDate: { type: Date },
+  
+  // Blockchain fields
+  blockchain: {
+    agreementId: { type: String },
+    contractAddress: { type: String },
+    deployedAt: { type: Date },
+    transactionHash: { type: String },
+    isImmutable: { type: Boolean, default: false }
+  }
 }, {
   timestamps: true
 });

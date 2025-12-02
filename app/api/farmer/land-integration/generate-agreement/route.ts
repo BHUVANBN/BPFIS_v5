@@ -4,7 +4,6 @@ import { LandIntegration } from '../../../../../lib/models/LandIntegration';
 import { FarmerProfile } from '../../../../../lib/models/FarmerProfile';
 import { LandDetails } from '../../../../../lib/models/LandDetails';
 import { getUserFromRequest } from '../../../../../lib/auth';
-import { ObjectId } from 'mongodb';
 
 export async function POST(request: Request) {
   try {
@@ -60,12 +59,10 @@ export async function POST(request: Request) {
           name: requestingProfile?.verifiedName || requestingProfile?.aadhaarKannadaName || 'Farmer 1',
           aadhaar: extractAadhaarNumber(
             requestingProfile?.documents?.aadhaar?.extractedText || 
-            requestingProfile?.aadharOcrText || 
-            requestingProfile?.aadhaarNumber
+            requestingProfile?.aadharOcrText
           ),
           surveyNo: requestingProfile?.landParcelIdentity || 
                    requestingLand?.rtcDetails?.surveyNumber || 
-                   requestingLand?.surveyNumber || 
                    '_________________',
           landSize: integrationRequest.landDetails.requestingUser.sizeInAcres
         },
@@ -73,12 +70,10 @@ export async function POST(request: Request) {
           name: targetProfile?.verifiedName || targetProfile?.aadhaarKannadaName || 'Farmer 2',
           aadhaar: extractAadhaarNumber(
             targetProfile?.documents?.aadhaar?.extractedText || 
-            targetProfile?.aadharOcrText || 
-            targetProfile?.aadhaarNumber
+            targetProfile?.aadharOcrText
           ),
           surveyNo: targetProfile?.landParcelIdentity || 
                    targetLand?.rtcDetails?.surveyNumber || 
-                   targetLand?.surveyNumber || 
                    '_________________',
           landSize: integrationRequest.landDetails.targetUser.sizeInAcres
         },
@@ -125,30 +120,20 @@ function generateAgreementContent(
   // Extract Aadhaar from OCR text
   const farmer1Aadhaar = extractAadhaarNumber(
     requestingProfile?.documents?.aadhaar?.extractedText || 
-    requestingProfile?.aadharOcrText || 
-    requestingProfile?.aadhaarNumber
+    requestingProfile?.aadharOcrText
   );
   const farmer2Aadhaar = extractAadhaarNumber(
     targetProfile?.documents?.aadhaar?.extractedText || 
-    targetProfile?.aadharOcrText || 
-    targetProfile?.aadhaarNumber
+    targetProfile?.aadharOcrText
   );
   
   // Extract survey number from farmer profile (landParcelIdentity) or RTC details
-  console.log('Requesting Profile:', JSON.stringify(requestingProfile, null, 2));
-  console.log('Target Profile:', JSON.stringify(targetProfile, null, 2));
-  
   const farmer1SurveyNo = requestingProfile?.landParcelIdentity || 
                          requestingLand?.rtcDetails?.surveyNumber || 
-                         requestingLand?.surveyNumber || 
                          '_________________';
   const farmer2SurveyNo = targetProfile?.landParcelIdentity || 
                          targetLand?.rtcDetails?.surveyNumber || 
-                         targetLand?.surveyNumber || 
                          '_________________';
-  
-  console.log('Farmer 1 Survey No:', farmer1SurveyNo);
-  console.log('Farmer 2 Survey No:', farmer2SurveyNo);
   
   const farmer1LandSize = integrationRequest.landDetails.requestingUser.sizeInAcres;
   const farmer2LandSize = integrationRequest.landDetails.targetUser.sizeInAcres;
