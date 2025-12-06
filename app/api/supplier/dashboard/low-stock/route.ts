@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Inventory } from '@/lib/models/inventory';
 import { Product } from '@/lib/models/product';
 import { Seller } from '@/lib/models/seller';
 import { connectDB } from '@/lib/db';
@@ -23,13 +22,6 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('📦 Fetching low stock products:', { sellerId });
-
-    // For development, handle temp seller ID without ObjectId validation
-    if (sellerId === 'temp-seller-id') {
-      return NextResponse.json({
-        products: []
-      });
-    }
 
     // Validate seller exists
     const seller = await Seller.findById(sellerId);

@@ -81,37 +81,37 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-[#1f3b2c]">Account Settings</h1>
-        <p className="text-sm text-[#6b7280] mt-1">Manage your account preferences and business settings</p>
+        <h1 className="page-title">Account Settings</h1>
+        <p className="text-sm text-[var(--gray-600)] mt-1">Manage your account preferences and business settings</p>
       </div>
 
       {/* Error and Success Messages */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-[var(--error-red-light)] border border-[var(--error-red-border)] rounded-lg p-4">
+          <p className="text-[var(--error-red)]">{error}</p>
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-800">{success}</p>
+        <div className="bg-[var(--success-green-light)] border border-[var(--success-green-border)] rounded-lg p-4">
+          <p className="text-[var(--success-green)]">{success}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Notification Settings */}
         <div className="lg:col-span-2">
-          <div className="bg-white border border-[#e2d4b7] rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-[#1f3b2c] mb-6">Notification Preferences</h2>
+          <div className="bg-white border border-[var(--gray-300)] rounded-lg p-6">
+            <h2 className="section-header mb-6">Notification Preferences</h2>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+              <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">Email Notifications</p>
-                  <p className="text-sm text-[#6b7280]">Receive important updates via email</p>
+                  <p className="font-medium text-[var(--navy-blue)]">Email Notifications</p>
+                  <p className="text-sm text-[var(--gray-600)]">Receive important updates via email</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.emailNotifications ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.emailNotifications ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle email notifications"
                 >
@@ -129,14 +129,14 @@ export default function SettingsPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+              <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">SMS Notifications</p>
-                  <p className="text-sm text-[#6b7280]">Get instant alerts on your phone</p>
+                  <p className="font-medium text-[var(--navy-blue)]">SMS Notifications</p>
+                  <p className="text-sm text-[var(--gray-600)]">Get instant alerts on your phone</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.smsNotifications ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.smsNotifications ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle SMS notifications"
                 >
@@ -154,14 +154,14 @@ export default function SettingsPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+              <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">Order Notifications</p>
-                  <p className="text-sm text-[#6b7280]">Alerts for new orders and status changes</p>
+                  <p className="font-medium text-[var(--navy-blue)]">Order Notifications</p>
+                  <p className="text-sm text-[var(--gray-600)]">Alerts for new orders and status changes</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.orderNotifications ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.orderNotifications ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle order notifications"
                 >
@@ -179,14 +179,14 @@ export default function SettingsPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+              <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">Low Stock Alerts</p>
-                  <p className="text-sm text-[#6b7280]">Get notified when inventory is running low</p>
+                  <p className="font-medium text-[var(--navy-blue)]">Low Stock Alerts</p>
+                  <p className="text-sm text-[var(--gray-600)]">Get notified when inventory is running low</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.lowStockAlerts ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.lowStockAlerts ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle low stock alerts"
                 >
@@ -204,14 +204,14 @@ export default function SettingsPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+              <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">Review Notifications</p>
-                  <p className="text-sm text-[#6b7280]">Alerts for new customer reviews</p>
+                  <p className="font-medium text-[var(--navy-blue)]">Review Notifications</p>
+                  <p className="text-sm text-[var(--gray-600)]">Alerts for new customer reviews</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.reviewNotifications ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.reviewNotifications ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle review notifications"
                 >
@@ -231,12 +231,12 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium text-[#1f3b2c]">Marketing Emails</p>
-                  <p className="text-sm text-[#6b7280]">Receive promotional offers and updates</p>
+                  <p className="font-medium text-[var(--navy-blue)]">Marketing Emails</p>
+                  <p className="text-sm text-[var(--gray-600)]">Receive promotional offers and updates</p>
                 </div>
                 <label
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.marketingEmails ? 'bg-[#1f3b2c]' : 'bg-gray-200'
+                    settings.marketingEmails ? 'bg-[var(--primary-teal)]' : 'bg-gray-200'
                   }`}
                   aria-label="Toggle marketing emails"
                 >
@@ -259,8 +259,8 @@ export default function SettingsPage() {
 
         {/* Business Settings */}
         <div className="lg:col-span-1">
-          <div className="bg-white border border-[#e2d4b7] rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-[#1f3b2c] mb-6">Business Settings</h2>
+          <div className="bg-white border border-[var(--gray-300)] rounded-lg p-6">
+            <h2 className="section-header mb-6">Business Settings</h2>
             
             <div className="space-y-4">
               <div>
@@ -270,7 +270,7 @@ export default function SettingsPage() {
                 <select
                   value={settings.defaultShippingMethod}
                   onChange={(e) => handleSelect('defaultShippingMethod', e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-gray-700"
+                  className="select-field"
                   aria-label="Select default shipping method"
                 >
                   <option value="standard">Standard Shipping</option>
@@ -286,7 +286,7 @@ export default function SettingsPage() {
                 <select
                   value={settings.returnPolicy}
                   onChange={(e) => handleSelect('returnPolicy', e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-gray-700"
+                  className="select-field"
                   aria-label="Select return policy"
                 >
                   <option value="7-days">7 Days</option>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                 <select
                   value={settings.currency}
                   onChange={(e) => handleSelect('currency', e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-gray-700"
+                  className="select-field"
                   aria-label="Select currency"
                 >
                   <option value="INR">Indian Rupee (₹)</option>
@@ -319,7 +319,7 @@ export default function SettingsPage() {
                 <select
                   value={settings.timezone}
                   onChange={(e) => handleSelect('timezone', e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-gray-700"
+                  className="select-field"
                   aria-label="Select timezone"
                 >
                   <option value="Asia/Kolkata">India Standard Time</option>
@@ -383,12 +383,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Security Settings */}
-      <div className="bg-white border border-[#e2d4b7] rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-[#1f3b2c] mb-6">Security Settings</h2>
+      <div className="bg-white border border-[var(--gray-300)] rounded-lg p-6">
+        <h2 className="section-header mb-6">Security Settings</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-[#e2d4b7]">
+            <div className="flex items-center justify-between py-3 border-b border-[var(--gray-300)]">
               <div>
                 <p className="font-medium text-[#1f3b2c]">Two-Factor Authentication</p>
                 <p className="text-sm text-[#6b7280]">Add an extra layer of security</p>
@@ -420,7 +420,7 @@ export default function SettingsPage() {
               <select
                 value={settings.sessionTimeout}
                 onChange={(e) => handleSelect('sessionTimeout', e.target.value)}
-                className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent text-gray-700"
+                className="select-field"
                 aria-label="Select session timeout"
               >
                 <option value="1h">1 Hour</option>
@@ -432,13 +432,13 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-4">
-            <button className="w-full px-4 py-2 border border-[#e2d4b7] rounded-md text-sm font-medium text-[#1f3b2c] hover:bg-[#f9fafb]" aria-label="Change password">
+            <button className="w-full btn-secondary btn-md" aria-label="Change password">
               Change Password
             </button>
-            <button className="w-full px-4 py-2 border border-[#e2d4b7] rounded-md text-sm font-medium text-[#1f3b2c] hover:bg-[#f9fafb]" aria-label="Download my data">
+            <button className="w-full btn-secondary btn-md" aria-label="Download my data">
               Download My Data
             </button>
-            <button className="w-full px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-600 hover:bg-red-50" aria-label="Delete account">
+            <button className="w-full btn-destructive btn-md" aria-label="Delete account">
               Delete Account
             </button>
           </div>
@@ -450,7 +450,7 @@ export default function SettingsPage() {
         <button
           onClick={handleSave}
           disabled={loading}
-          className="inline-flex items-center justify-center rounded-md bg-[#1f3b2c] px-6 py-2 text-sm font-medium text-white hover:bg-[#2d4f3c] disabled:opacity-50"
+          className="btn-primary btn-md"
         >
           {loading ? 'Saving...' : 'Save Settings'}
         </button>

@@ -243,10 +243,10 @@ export default function ProfilePage() {
 
   const getVerificationStatusColor = (status: string) => {
     switch (status) {
-      case 'verified': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'verified': return 'badge-success';
+      case 'pending': return 'badge-warning';
+      case 'rejected': return 'badge-error';
+      default: return 'badge-neutral';
     }
   };
 
@@ -299,14 +299,14 @@ export default function ProfilePage() {
         <div className="flex items-center space-x-2">
           <Link
             href="/dashboard/supplier/profile/verification"
-            className="inline-flex items-center justify-center rounded-md border border-[#e2d4b7] px-4 py-2 text-sm font-medium text-[#1f3b2c] hover:bg-[#f9fafb]"
+            className="btn-secondary btn-md"
           >
             Verification Documents
           </Link>
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="inline-flex items-center justify-center rounded-md bg-[#1f3b2c] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d4f3c]"
+              className="btn-primary btn-md"
             >
               Edit Profile
             </button>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
           <div className="bg-white border border-[#e2d4b7] rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-[#1f3b2c]">Business Information</h2>
-              <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getVerificationStatusColor(profile.verificationStatus)}`}>
+              <span className={`badge ${getVerificationStatusColor(profile.verificationStatus)}`}>
                 {profile.verificationStatus === 'verified' ? 'Verified' : profile.verificationStatus === 'pending' ? 'Pending Verification' : 'Not Verified'}
               </span>
             </div>
@@ -351,7 +351,7 @@ export default function ProfilePage() {
                       required
                       value={formData.companyName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      className="input-field"
                     />
                   </div>
 
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      className="input-field"
                     />
                   </div>
 
@@ -381,7 +381,7 @@ export default function ProfilePage() {
                       required
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      className="input-field"
                     />
                   </div>
 
@@ -395,7 +395,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.gstNumber}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      className="input-field"
                     />
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function ProfilePage() {
                         name="businessDetails.businessType"
                         value={formData.businessDetails.businessType}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="select-field"
                       >
                         <option value="">Select business type</option>
                         <option value="individual">Individual Farmer</option>
@@ -436,7 +436,7 @@ export default function ProfilePage() {
                         name="businessDetails.yearsInOperation"
                         value={formData.businessDetails.yearsInOperation}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="select-field"
                       >
                         <option value="">Select years</option>
                         <option value="0-1">Less than 1 year</option>
@@ -456,7 +456,7 @@ export default function ProfilePage() {
                         name="businessDetails.productCategories"
                         value={formData.businessDetails.productCategories}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="select-field"
                       >
                         <option value="">Select category</option>
                         <option value="seeds">Seeds & Planting Material</option>
@@ -484,7 +484,7 @@ export default function ProfilePage() {
                       value={formData.address.street}
                       onChange={handleInputChange}
                       placeholder="Street Address"
-                      className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                      className="input-field"
                     />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <input
@@ -494,7 +494,7 @@ export default function ProfilePage() {
                         value={formData.address.city}
                         onChange={handleInputChange}
                         placeholder="City"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="input-field"
                       />
                       <input
                         name="address.state"
@@ -503,7 +503,7 @@ export default function ProfilePage() {
                         value={formData.address.state}
                         onChange={handleInputChange}
                         placeholder="State"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="input-field"
                       />
                       <input
                         name="address.pincode"
@@ -512,7 +512,7 @@ export default function ProfilePage() {
                         value={formData.address.pincode}
                         onChange={handleInputChange}
                         placeholder="Pincode"
-                        className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+                        className="input-field"
                       />
                     </div>
                   </div>
@@ -525,13 +525,13 @@ export default function ProfilePage() {
                       setEditing(false);
                       loadProfile(); // Reset form
                     }}
-                    className="inline-flex items-center justify-center rounded-md border border-[#e2d4b7] px-4 py-2 text-sm font-medium text-[#1f3b2c] hover:bg-[#f9fafb]"
+                    className="btn-secondary btn-md"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-md bg-[#1f3b2c] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d4f3c]"
+                    className="btn-primary btn-md"
                   >
                     Save Changes
                   </button>
@@ -598,13 +598,13 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[#6b7280]">Verification</span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getVerificationStatusColor(profile.verificationStatus)}`}>
+                  <span className={`badge ${getVerificationStatusColor(profile.verificationStatus)}`}>
                     {profile.verificationStatus}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[#6b7280]">Account Status</span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${profile.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  <span className={`badge ${profile.isActive ? 'badge-success' : 'badge-error'}`}>
                     {profile.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
@@ -633,7 +633,7 @@ export default function ProfilePage() {
                 >
                   Account Settings
                 </Link>
-                <button className="block w-full text-center px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">
+                <button className="block w-full text-center btn-destructive btn-md">
                   Delete Account
                 </button>
               </div>

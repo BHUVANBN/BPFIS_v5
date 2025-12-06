@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getSellerId, getAuthHeaders } from '@/lib/supplier-auth';
+import { getAuthHeaders } from '@/lib/supplier-auth';
 
 interface Product {
   _id: string;
@@ -32,7 +31,6 @@ interface ProductsResponse {
 }
 
 export default function ProductsPage() {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +38,12 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  } | null>(null);
 
   const categories = [
     { value: '', label: 'All Categories' },
@@ -60,11 +63,7 @@ export default function ProductsPage() {
     { value: 'draft', label: 'Draft' }
   ];
 
-  useEffect(() => {
-    loadProducts();
-  }, [searchTerm, selectedCategory, selectedStatus, currentPage]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -92,7 +91,11 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, selectedCategory, selectedStatus]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) {
@@ -124,13 +127,15 @@ export default function ProductsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to toggle product status');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.error || errorData.details || 'Failed to toggle product status');
       }
 
       await loadProducts(); // Reload products
     } catch (error) {
       console.error('Error toggling product status:', error);
-      setError('Failed to toggle product status');
+      setError(error instanceof Error ? error.message : 'Failed to toggle product status');
     }
   };
 
@@ -189,7 +194,10 @@ export default function ProductsPage() {
               type="text"
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
             />
           </div>
@@ -198,8 +206,12 @@ export default function ProductsPage() {
             <label className="block text-sm font-medium text-[#6b7280] mb-1">Category</label>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+              aria-label="Select product category"
             >
               {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -213,8 +225,12 @@ export default function ProductsPage() {
             <label className="block text-sm font-medium text-[#6b7280] mb-1">Status</label>
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full px-3 py-2 border border-[#e2d4b7] rounded-md focus:outline-none focus:ring-2 focus:ring-[#1f3b2c] focus:border-transparent placeholder-gray-600 text-gray-700"
+              aria-label="Select product status"
             >
               {statusOptions.map((status) => (
                 <option key={status.value} value={status.value}>

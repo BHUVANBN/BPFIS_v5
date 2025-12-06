@@ -18,13 +18,6 @@ export async function GET(request: NextRequest) {
 
     console.log('🏆 Fetching top products:', { sellerId });
 
-    // For development, handle temp seller ID without ObjectId validation
-    if (sellerId === 'temp-seller-id') {
-      return NextResponse.json({
-        products: []
-      });
-    }
-
     const seller = await Seller.findById(sellerId);
     if (!seller) {
       return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
