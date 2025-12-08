@@ -24,19 +24,6 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 Fetching dashboard stats:', { sellerId });
 
-    // For development, handle temp seller ID without ObjectId validation
-    if (sellerId === 'temp-seller-id') {
-      // Return empty stats for development
-      return NextResponse.json({
-        totalRevenue: 0,
-        totalOrders: 0,
-        activeProducts: 0,
-        avgOrderValue: 0,
-        revenueGrowth: 0,
-        orderGrowth: 0
-      });
-    }
-
     // Validate seller exists
     const seller = await Seller.findById(sellerId);
     if (!seller) {

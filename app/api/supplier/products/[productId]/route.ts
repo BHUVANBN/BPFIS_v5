@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Product, InventoryLog } from '@/lib/models/supplier';
+import { Product } from '@/lib/models/product';
 import { connectDB } from '@/lib/db';
-import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 // GET /api/supplier/products/[productId] - Get single product
 export async function GET(
@@ -18,10 +18,32 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const product = await Product.findOne({
-      _id: productId as any,
-      sellerId: sellerId as any
-    });
+    // For development, handle temp seller ID without ObjectId validation
+    let finalSellerId = sellerId;
+    if (sellerId === 'temp-seller-id') {
+      finalSellerId = '65a1b2c3d4e5f6789012345';
+      console.log('⚠️ Converting temp-seller-id to test seller ID for development (GET)');
+    }
+
+    let product;
+    
+    // For test seller ID, use direct MongoDB query
+    if (finalSellerId === '65a1b2c3d4e5f6789012345') {
+      const db = mongoose.connection.db;
+      if (!db) {
+        return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
+      }
+      
+      product = await db.collection('products').findOne({
+        _id: new mongoose.Types.ObjectId(productId),
+        sellerId: finalSellerId
+      });
+    } else {
+      product = await Product.findOne({
+        _id: new mongoose.Types.ObjectId(productId),
+        sellerId: finalSellerId
+      });
+    }
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -30,7 +52,15 @@ export async function GET(
     return NextResponse.json({ product });
   } catch (error) {
     console.error('Error fetching product:', error);
-    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      productId: await params.then(p => p.productId).catch(() => 'unknown')
+    });
+    return NextResponse.json({ 
+      error: 'Failed to fetch product',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
@@ -52,36 +82,18 @@ export async function PUT(
     const body = await request.json();
     const { name, category, description, price, stockQuantity, reorderThreshold, tags, specifications, dimensions, status } = body;
 
-    // Find current product to track stock changes
+    // Find current product
     const currentProduct = await Product.findOne({
-      _id: productId as any,
-      sellerId: sellerId as any
+      _id: new mongoose.Types.ObjectId(productId),
+      sellerId: sellerId
     });
 
     if (!currentProduct) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Track stock changes
-    const oldStock = currentProduct.stockQuantity;
-    const newStock = stockQuantity !== undefined ? stockQuantity : oldStock;
-    
-    if (oldStock !== newStock) {
-      // Create inventory log
-      const change = newStock - oldStock;
-      await new InventoryLog({
-        productId: productId as any,
-        sellerId: sellerId as any,
-        change,
-        reason: 'manual',
-        previousStock: oldStock,
-        newStock,
-        notes: 'Stock updated via product edit'
-      }).save();
-    }
-
     // Update product
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (category) updateData.category = category;
     if (description) updateData.description = description;
@@ -94,7 +106,7 @@ export async function PUT(
     if (status) updateData.status = status;
 
     const product = await Product.findByIdAndUpdate(
-      productId as any,
+      new mongoose.Types.ObjectId(productId),
       updateData,
       { new: true, runValidators: true }
     );
@@ -125,8 +137,8 @@ export async function DELETE(
     }
 
     const product = await Product.findOneAndDelete({
-      _id: productId as any,
-      sellerId: sellerId as any
+      _id: new mongoose.Types.ObjectId(productId),
+      sellerId: sellerId
     });
 
     if (!product) {
@@ -157,10 +169,32 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const product = await Product.findOne({
-      _id: productId as any,
-      sellerId: sellerId as any
-    });
+    // For development, handle temp seller ID without ObjectId validation
+    let finalSellerId = sellerId;
+    if (sellerId === 'temp-seller-id') {
+      finalSellerId = '65a1b2c3d4e5f6789012345';
+      console.log('⚠️ Converting temp-seller-id to test seller ID for development (TOGGLE)');
+    }
+
+    let product;
+    
+    // For test seller ID, use direct MongoDB query
+    if (finalSellerId === '65a1b2c3d4e5f6789012345') {
+      const db = mongoose.connection.db;
+      if (!db) {
+        return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
+      }
+      
+      product = await db.collection('products').findOne({
+        _id: new mongoose.Types.ObjectId(productId),
+        sellerId: finalSellerId
+      });
+    } else {
+      product = await Product.findOne({
+        _id: new mongoose.Types.ObjectId(productId),
+        sellerId: finalSellerId
+      });
+    }
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -169,11 +203,32 @@ export async function POST(
     // Toggle between active and inactive
     const newStatus = product.status === 'active' ? 'inactive' : 'active';
     
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId as any,
-      { status: newStatus },
-      { new: true }
-    );
+    let updatedProduct;
+    
+    // For test seller ID, use direct MongoDB update
+    if (finalSellerId === '65a1b2c3d4e5f6789012345') {
+      const db = mongoose.connection.db;
+      if (!db) {
+        return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
+      }
+      
+      const result = await db.collection('products').updateOne(
+        { _id: new mongoose.Types.ObjectId(productId), sellerId: finalSellerId },
+        { $set: { status: newStatus, updatedAt: new Date() } }
+      );
+      
+      if (result.matchedCount === 0) {
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      }
+      
+      updatedProduct = { ...product, status: newStatus, updatedAt: new Date() };
+    } else {
+      updatedProduct = await Product.findByIdAndUpdate(
+        new mongoose.Types.ObjectId(productId),
+        { status: newStatus },
+        { new: true }
+      );
+    }
 
     return NextResponse.json({ 
       message: `Product ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
@@ -181,6 +236,14 @@ export async function POST(
     });
   } catch (error) {
     console.error('Error toggling product status:', error);
-    return NextResponse.json({ error: 'Failed to toggle product status' }, { status: 500 });
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      productId: await params.then(p => p.productId).catch(() => 'unknown')
+    });
+    return NextResponse.json({ 
+      error: 'Failed to toggle product status',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

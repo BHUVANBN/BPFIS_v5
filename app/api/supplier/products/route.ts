@@ -70,20 +70,40 @@ export async function GET(request: NextRequest) {
     
     let products, totalCount;
     
-    // For test seller ID, use direct MongoDB query
+    // For test seller ID, use direct MongoDB query with filters
     if (finalSellerId === '65a1b2c3d4e5f6789012345') {
       const db = mongoose.connection.db;
       if (!db) {
         return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
       }
+      
+      // Build the query object for MongoDB
+      const mongoQuery: Record<string, unknown> = { sellerId: finalSellerId };
+      
+      if (status) {
+        mongoQuery.status = status;
+      }
+      
+      if (category) {
+        mongoQuery.category = category;
+      }
+      
+      if (search) {
+        mongoQuery.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { sku: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ];
+      }
+      
       const productsCursor = db.collection('products')
-        .find({ sellerId: finalSellerId })
+        .find(mongoQuery)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
       
       products = await productsCursor.toArray();
-      totalCount = await db.collection('products').countDocuments({ sellerId: finalSellerId });
+      totalCount = await db.collection('products').countDocuments(mongoQuery);
     } else {
       // Use Mongoose model for real sellers
       [products, totalCount] = await Promise.all([

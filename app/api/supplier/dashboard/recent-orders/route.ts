@@ -23,13 +23,6 @@ export async function GET(request: NextRequest) {
 
     console.log('📋 Fetching recent orders:', { sellerId });
 
-    // For development, handle temp seller ID without ObjectId validation
-    if (sellerId === 'temp-seller-id') {
-      return NextResponse.json({
-        orders: []
-      });
-    }
-
     // Validate seller exists
     const seller = await Seller.findById(sellerId);
     if (!seller) {
