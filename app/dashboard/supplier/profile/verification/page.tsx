@@ -80,17 +80,34 @@ export default function VerificationPage() {
 
   const loadProfile = async () => {
     try {
-      const response = await fetch('/api/supplier/profile', withSupplierAuth());
+      // First, get the supplier ID
+      const profileResponse = await fetch('/api/supplier', withSupplierAuth());
+      if (!profileResponse.ok) {
+        throw new Error('Failed to load supplier profile');
+      }
+      
+      const profileData = await profileResponse.json();
+      const currentSupplierId = profileData.supplier?._id || profileData.seller?._id;
+      
+      if (!currentSupplierId) {
+        throw new Error('Supplier ID not found in profile');
+      }
+
+      // Now fetch the full profile with the ID
+      const response = await fetch(
+        `/api/supplier/${currentSupplierId}/profile`, 
+        withSupplierAuth()
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to load profile');
+        throw new Error('Failed to load profile details');
       }
 
       const data = await response.json();
-      setProfile(data.seller);
+      setProfile(data.seller || data.supplier);
     } catch (error) {
       console.error('Error loading profile:', error);
-      setError('Failed to load profile');
+      setError('Failed to load profile. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -104,6 +121,11 @@ export default function VerificationPage() {
   };
 
   const handleUpload = async () => {
+    if (!profile?._id) {
+      setError('Supplier profile not loaded. Please refresh the page and try again.');
+      return;
+    }
+
     setUploading(true);
     setError('');
     setSuccess('');
@@ -111,39 +133,57 @@ export default function VerificationPage() {
     try {
       const formData = new FormData();
       
+      // Add all documents to form data
       Object.entries(documents).forEach(([key, file]) => {
         if (file) {
           formData.append(key, file);
         }
       });
 
-      const response = await fetch('/api/supplier/documents', withSupplierAuth({
+      const response = await fetch(`/api/supplier/${profile._id}/documents`, {
         method: 'POST',
-        body: formData
-      }));
+        body: formData,
+        credentials: 'include' // Include credentials for the session cookie
+        // Let the browser set the content-type with the correct boundary
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server returned an invalid response');
+      }
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Check if[x] if there were any upload failures
-        if (data.uploadSummary && data.uploadSummary.failed > 0) {
-          setSuccess(`Documents processed! ${data.uploadSummary.successful} uploaded successfully, ${data.uploadSummary.failed} saved locally. Your verification is under review.`);
-          
-          // Log failed uploads for debugging
-          if (data.uploadSummary.failedDetails && data.uploadSummary.failedDetails.length > 0) {
-            console.warn('Some documents failed to upload:', data.uploadSummary.failedDetails);
-          }
-        } else {
-          setSuccess('All documents uploaded successfully! Your verification is now under review.');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload documents');
+      }
+
+      // Handle successful upload
+      if (data.uploadSummary) {
+        const { successful, failed, failedDetails } = data.uploadSummary;
+        
+        // Log failed uploads for debugging
+        if (failed > 0 && failedDetails?.length > 0) {
+          console.warn('Some documents failed to upload:', failedDetails);
         }
         
-        await loadProfile(); // Reload profile
+        if (successful > 0) {
+          setSuccess(`Successfully uploaded ${successful} document(s). ${failed > 0 ? `${failed} document(s) failed to upload.` : 'Your verification is now under review.'}`);
+        } else {
+          throw new Error('No documents were uploaded successfully');
+        }
       } else {
-        setError(data.error || 'Failed to upload documents');
+        setSuccess('Documents uploaded successfully! Your verification is now under review.');
       }
-    } catch (error) {
+
+      // Refresh the profile to show updated documents
+      await loadProfile();
+    } catch (error: any) {
       console.error('Error uploading documents:', error);
-      setError(error instanceof Error ? error.message : 'Failed to upload documents');
+      setError(error.message || 'Failed to upload documents. Please try again.');
     } finally {
       setUploading(false);
     }

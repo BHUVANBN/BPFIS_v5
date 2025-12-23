@@ -173,7 +173,7 @@ export async function authenticateSupplier(request: NextRequest): Promise<Authen
 
 export async function requireAuth(
   request: NextRequest,
-  params?: { params?: { supplierId?: string } }
+  paramsOrPromise?: { params?: { supplierId?: string } } | Promise<{ params: { supplierId?: string } }>
 ): Promise<AuthenticatedSeller> {
   const auth = await authenticateSupplier(request);
   
@@ -181,15 +181,31 @@ export async function requireAuth(
     throw new Error('Authentication required');
   }
 
-  // Verify supplierId in route matches authenticated user
-  const supplierIdFromRoute = params?.params?.supplierId;
-  if (supplierIdFromRoute && supplierIdFromRoute !== 'temp' && supplierIdFromRoute !== auth.sellerId) {
-    throw new Error('Unauthorized access to this supplier resource');
+  // Handle the case where params might be a Promise
+  let resolvedParams: { params?: { supplierId?: string } } = {};
+  try {
+    resolvedParams = await Promise.resolve(paramsOrPromise || {});
+  } catch (error) {
+    console.error('Error resolving params:', error);
+    throw new Error('Invalid route parameters');
   }
 
-  // Skip supplierId validation for routes that don't have supplierId parameter
+  // Verify supplierId in route matches authenticated user
+  const supplierIdFromRoute = resolvedParams?.params?.supplierId;
+  
+  // For document uploads, we need to verify the supplier ID in the URL matches the authenticated user
+  if (supplierIdFromRoute && supplierIdFromRoute !== 'temp') {
+    if (supplierIdFromRoute !== auth.sellerId) {
+      console.error(`Unauthorized access attempt: User ${auth.sellerId} tried to access ${supplierIdFromRoute}`);
+      throw new Error('Unauthorized access to this supplier resource');
+    }
+    return auth;
+  }
+
+  // Skip supplierId validation for analytics routes
   const isAnalyticsRoute = request.nextUrl?.pathname?.includes('/analytics');
-  if (!supplierIdFromRoute && !isAnalyticsRoute) {
+  if (!isAnalyticsRoute && !supplierIdFromRoute) {
+    console.error('Supplier ID is required for this route');
     throw new Error('Supplier ID required for this route');
   }
 
