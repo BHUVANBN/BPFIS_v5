@@ -4,24 +4,24 @@ import { Users, Target, Heart, Award, Globe, Lightbulb, Shield } from 'lucide-re
 export default function About() {
   const team = [
     {
-      name: "Dr. Rajesh Kumar",
-      role: "CEO & Founder",
-      description: "Agricultural scientist with 15+ years of experience in sustainable farming and blockchain technology."
+      name: "Goutham Chakravarthy S",
+      role: "CEO (Chief Executive Officer)",
+      description: "Visionary leader and co-founder driving the company's strategic direction and growth."
     },
     {
-      name: "Priya Sharma",
-      role: "CTO",
-      description: "AI and blockchain expert passionate about transforming agriculture through technology."
+      name: "Bhuvan B N",
+      role: "CTO (Chief Technical Officer)",
+      description: "Technology expert and co-founder leading our technical vision and product development."
     },
     {
-      name: "Amit Patel",
-      role: "Head of Operations",
-      description: "Supply chain specialist focused on connecting farmers with global markets."
+      name: "Surya Y S",
+      role: "COO (Chief Operations Officer)",
+      description: "Operations leader and co-founder ensuring seamless execution of our business strategies."
     },
     {
-      name: "Sneha Reddy",
-      role: "Head of Community",
-      description: "Dedicated to building and supporting the farmer community across India."
+      name: "Ramya T G",
+      role: "CPO (Chief Product Officer)",
+      description: "Product visionary and co-founder shaping innovative solutions for our users."
     }
   ];
 
