@@ -1,9 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Order } from '@/lib/models/supplier';
-import { FarmerOrder } from '@/lib/models/FarmerOrder';
+import { FarmerOrder as FarmerOrderModel } from '@/lib/models/FarmerOrder';
 import { requireAuth } from '@/lib/supplier-auth-middleware';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+
+interface SupplierOrder {
+  _id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  items: any[];
+  createdAt: Date;
+  source: 'supplier' | 'farmer';
+}
+
+interface FarmerOrderItem {
+  sellerId: Types.ObjectId | string | null;
+  productId: Types.ObjectId | string | null;
+  quantity: number;
+  price: number;
+  [key: string]: any; // For any additional properties
+}
+
+interface FarmerOrder {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  items: FarmerOrderItem[];
+  status: string;
+  createdAt: Date;
+  [key: string]: any; // For any additional properties
+}
 
 export async function GET(
   request: NextRequest,
@@ -73,14 +103,14 @@ export async function GET(
 
     // Get farmer orders
     console.log('Fetching farmer orders for sellerId:', sellerId);
-    const farmerOrders = await FarmerOrder.find(farmerQuery)
+    const farmerOrders = await FarmerOrderModel.find(farmerQuery)
       .sort({ createdAt: -1 })
-      .lean();
+      .lean<FarmerOrder[]>();
 
     console.log('Found farmer orders:', farmerOrders.length);
-    farmerOrders.forEach(order => {
+    farmerOrders.forEach((order: FarmerOrder) => {
       console.log(`Farmer order ${order.orderNumber}: items with sellerId:`, 
-        order.items.filter((item: any) => 
+        order.items.filter((item: FarmerOrderItem) => 
           item.sellerId?.toString() === sellerId || 
           item.sellerId?.toString() === sellerObjectId.toString()
         ).length
@@ -88,8 +118,8 @@ export async function GET(
     });
 
     // Combine and format orders
-    const allOrders = [
-      ...supplierOrders.map((order: any) => ({
+    const allOrders: SupplierOrder[] = [
+      ...supplierOrders.map((order: any): SupplierOrder => ({
         _id: order._id.toString(),
         orderNumber: order.orderNumber,
         customerName: order.customer?.name || 'Customer',
@@ -102,17 +132,18 @@ export async function GET(
         source: 'supplier'
       })),
       ...farmerOrders
-        .map(order => {
+        .map((order: FarmerOrder): SupplierOrder | null => {
           // Filter items for this supplier only
-          const supplierItems = order.items.filter((item: any) => 
+          const supplierItems = order.items.filter((item: FarmerOrderItem) => 
             item.sellerId?.toString() === sellerId || 
             item.sellerId?.toString() === sellerObjectId.toString()
           );
           
           if (supplierItems.length === 0) return null;
           
-          const supplierTotal = supplierItems.reduce((sum: number, item: any) => 
-            sum + (item.price * item.quantity), 0
+          const supplierTotal = supplierItems.reduce(
+            (sum: number, item: FarmerOrderItem) => sum + (item.price * item.quantity), 
+            0
           );
           
           // Map farmer order status to supplier order status
@@ -127,17 +158,17 @@ export async function GET(
           return {
             _id: order._id.toString(),
             orderNumber: order.orderNumber,
-            customerName: order.shipping?.name || 'Customer',
-            customerPhone: order.shipping?.phone || '',
+            customerName: (order as any).shipping?.name || 'Customer',
+            customerPhone: (order as any).shipping?.phone || '',
             totalAmount: supplierTotal,
             status: statusMap[order.status] || order.status,
-            paymentStatus: order.paymentStatus || 'pending',
+            paymentStatus: (order as any).paymentStatus || 'pending',
             items: supplierItems,
             createdAt: order.createdAt,
             source: 'farmer'
           };
         })
-        .filter((order): order is NonNullable<typeof order> => order !== null)
+        .filter((order: SupplierOrder | null): order is SupplierOrder => order !== null)
     ]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

@@ -4,7 +4,62 @@ import { Order } from '@/lib/models/supplier';
 import { Product } from '@/lib/models/supplier';
 import { FarmerOrder } from '@/lib/models/FarmerOrder';
 import { requireAuth } from '@/lib/supplier-auth-middleware';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+
+interface SupplierOrder {
+  _id: Types.ObjectId;
+  totalAmount: number;
+  orderStatus: string;
+  createdAt: Date;
+  items: Array<{
+    productId: Types.ObjectId | {
+      _id: Types.ObjectId;
+      name: string;
+      price: number;
+    };
+    quantity: number;
+    price: number;
+  }>;
+}
+
+interface FarmerOrderType {
+  _id: Types.ObjectId;
+  totalAmount: number;
+  status: string;
+  createdAt: Date;
+  items: Array<{
+    productId: Types.ObjectId | string;
+    sellerId: Types.ObjectId | string;
+    quantity: number;
+    price: number;
+  }>;
+}
+
+interface RecentSupplierOrder {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  customer?: {
+    name: string;
+  };
+  totalAmount: number;
+  orderStatus: string;
+  createdAt: Date;
+}
+
+interface RecentFarmerOrder {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  shipping?: {
+    name: string;
+  };
+  status: string;
+  items: Array<{
+    sellerId: Types.ObjectId | string;
+    price: number;
+    quantity: number;
+  }>;
+  createdAt: Date;
+}
 
 export async function GET(
   request: NextRequest,
@@ -40,12 +95,12 @@ export async function GET(
 
     // Combine and process orders
     const allOrders = [
-      ...supplierOrders.map(o => ({
+      ...supplierOrders.map((o: SupplierOrder) => ({
         totalAmount: o.totalAmount,
         orderStatus: o.orderStatus,
         createdAt: o.createdAt
       })),
-      ...farmerOrders.map(o => ({
+      ...farmerOrders.map((o: FarmerOrderType) => ({
         // Calculate total for this supplier's items only
         totalAmount: o.items
           .filter((item: any) => 
@@ -74,8 +129,8 @@ export async function GET(
     });
 
     const previousAllOrders = [
-      ...previousSupplierOrders.map(o => ({ totalAmount: o.totalAmount })),
-      ...previousFarmerOrders.map(o => ({
+      ...previousSupplierOrders.map((o: SupplierOrder) => ({ totalAmount: o.totalAmount })),
+      ...previousFarmerOrders.map((o: FarmerOrderType) => ({
         totalAmount: o.items
           .filter((item: any) => 
             item.sellerId?.toString() === sellerId || 
@@ -96,15 +151,29 @@ export async function GET(
       ? ((totalOrders - previousOrderCount) / previousOrderCount) * 100 
       : 0;
 
-    // Get product statistics
+    // Get product count
     const activeProducts = await Product.countDocuments({ 
-      sellerId: sellerObjectId as any, 
-      status: 'active' 
+      sellerId: sellerObjectId as any,
+      status: 'active'
     });
+
+    // Get product statistics
+    const topProducts = await Product.aggregate<{
+      _id: Types.ObjectId;
+      name: string;
+      price: number;
+      images: string[];
+      orderCount: number;
+    }>([
+      { $match: { sellerId: sellerObjectId as any } },
+      { $project: { name: 1, price: 1, images: 1, orderCount: { $size: { $ifNull: ['$orders', []] } } } },
+      { $sort: { orderCount: -1 } },
+      { $limit: 5 }
+    ]);
 
     // Get order status breakdown
     const statusBreakdown: Record<string, number> = {};
-    allOrders.forEach(order => {
+    allOrders.forEach((order: { orderStatus: string }) => {
       statusBreakdown[order.orderStatus] = (statusBreakdown[order.orderStatus] || 0) + 1;
     });
 
@@ -112,49 +181,60 @@ export async function GET(
     const recentSupplierOrders = await Order.find({ sellerId: sellerObjectId as any })
       .sort({ createdAt: -1 })
       .limit(5)
-      .lean();
+      .lean<RecentSupplierOrder[]>();
 
     const recentFarmerOrders = await FarmerOrder.find({
-      'items.sellerId': { $in: [sellerId, sellerObjectId.toString()] }
+      'items.sellerId': { $in: [sellerId, sellerObjectId.toString()] },
+      createdAt: { $gte: startDate }
     })
       .sort({ createdAt: -1 })
       .limit(5)
-      .lean();
+      .lean<RecentFarmerOrder[]>();
 
     const recentOrders = [
-      ...recentSupplierOrders.map(order => ({
+      ...recentSupplierOrders.map((order: RecentSupplierOrder) => ({
         _id: order._id.toString(),
         orderNumber: order.orderNumber,
         customerName: order.customer?.name || 'Customer',
         totalAmount: order.totalAmount,
         status: order.orderStatus,
-        createdAt: order.createdAt
+        date: order.createdAt
       })),
-      ...recentFarmerOrders.map(order => ({
-        _id: order._id.toString(),
-        orderNumber: order.orderNumber,
-        customerName: order.shipping?.name || 'Customer',
-        totalAmount: order.items
-          .filter((item: any) => 
-            item.sellerId?.toString() === sellerId || 
-            item.sellerId?.toString() === sellerObjectId.toString()
-          )
-          .reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0),
-        status: order.status === 'confirmed' ? 'new' : order.status === 'processing' ? 'processing' : order.status === 'shipped' ? 'shipped' : order.status === 'delivered' ? 'delivered' : 'cancelled',
-        createdAt: order.createdAt
-      }))
-    ]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      ...recentFarmerOrders.map((order: RecentFarmerOrder) => {
+        const sellerItems = order.items.filter((item: { sellerId: Types.ObjectId | string | null | undefined }) => 
+          item.sellerId?.toString() === sellerId || 
+          item.sellerId?.toString() === sellerObjectId.toString()
+        );
+        
+        return {
+          _id: order._id.toString(),
+          orderNumber: order.orderNumber,
+          customerName: order.shipping?.name || 'Customer',
+          totalAmount: sellerItems.reduce((sum: number, item: { price: number; quantity: number }) => sum + (item.price * item.quantity), 0),
+          status: order.status,
+          date: order.createdAt
+        };
+      })
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
 
     return NextResponse.json({
-      totalRevenue,
-      totalOrders,
-      avgOrderValue,
-      activeProducts,
-      revenueGrowth,
-      orderGrowth,
-      statusBreakdown
+      stats: {
+        revenue: {
+          current: totalRevenue,
+          previous: previousRevenue,
+          growth: revenueGrowth
+        },
+        orders: {
+          current: totalOrders,
+          previous: previousOrderCount,
+          growth: orderGrowth
+        },
+        activeProducts,
+        statusBreakdown,
+        recentOrders,
+        topProducts
+      }
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

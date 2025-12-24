@@ -135,7 +135,7 @@ DocumentSchema.methods.getPublicUrl = function() {
   return null;
 };
 
-const DocumentModel = mongoose.models.Document as mongoose.Model<IDocument> || 
+const DocumentModel = mongoose.models.Document ||
   mongoose.model<IDocument>('Document', DocumentSchema);
 
 export default DocumentModel;

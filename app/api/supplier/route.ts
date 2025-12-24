@@ -29,7 +29,11 @@ export async function GET(request: Request) {
     if (!supplier) {
       console.log('Supplier not found, checking all suppliers...');
       const allSuppliers = await Seller.find({}).select('_id email isActive');
-      console.log('All suppliers in database:', allSuppliers.map(s => ({ id: s._id, email: s.email, active: s.isActive })));
+      console.log('All suppliers in database:', allSuppliers.map((s: any) => ({ 
+        id: s._id, 
+        email: s.email, 
+        active: s.isActive 
+      })));
       
       return NextResponse.json({ 
         supplier: null,

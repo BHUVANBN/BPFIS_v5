@@ -45,8 +45,9 @@ export async function GET(request: NextRequest) {
       createdAt: { $gte: startDate } 
     }).populate('items.productId');
 
-    const totalRevenue = orders.reduce((sum, order) => {
-      return sum + order.items.reduce((itemSum, item) => itemSum + (item.total || 0), 0);
+    const totalRevenue = orders.reduce((sum: number, order: any) => {
+      return sum + order.items.reduce((itemSum: number, item: any) => 
+        itemSum + (item.total || 0), 0);
     }, 0);
 
     const totalOrders = orders.length;
@@ -62,8 +63,9 @@ export async function GET(request: NextRequest) {
       createdAt: { $gte: previousStartDate, $lt: startDate } 
     }).populate('items.productId');
 
-    const previousRevenueTotal = previousOrders.reduce((sum, order) => {
-      return sum + order.items.reduce((itemSum, item) => itemSum + (item.total || 0), 0);
+    const previousRevenueTotal = previousOrders.reduce((sum: number, order: any) => {
+      return sum + order.items.reduce((itemSum: number, item: any) => 
+        itemSum + (item.total || 0), 0);
     }, 0);
 
     const previousOrdersCount = previousOrders.length;

@@ -4,6 +4,14 @@ import { FarmerOrder } from '@/lib/models/FarmerOrder';
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 
+// Type for top products aggregation result
+interface TopProductAggregation {
+  _id: mongoose.Types.ObjectId | null;
+  name: string;
+  quantity: number;
+  revenue: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -167,13 +175,13 @@ export async function GET(request: NextRequest) {
 
     // Combine top products
     const allTopProducts = [
-      ...supplierTopProductsAggregation.map((product) => ({
+      ...supplierTopProductsAggregation.map((product: TopProductAggregation) => ({
         productId: product._id?.toString() ?? '',
         name: product.name,
         quantity: product.quantity,
         revenue: product.revenue
       })),
-      ...farmerTopProductsAggregation.map((product) => ({
+      ...farmerTopProductsAggregation.map((product: TopProductAggregation) => ({
         productId: product._id?.toString() ?? '',
         name: product.name,
         quantity: product.quantity,

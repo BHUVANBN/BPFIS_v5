@@ -3,6 +3,20 @@ import { connectDB } from '../../../../../lib/db';
 import { LandIntegration } from '../../../../../lib/models/LandIntegration';
 import { FarmerProfile } from '../../../../../lib/models/FarmerProfile';
 import { getUserFromRequest } from '../../../../../lib/auth';
+import { Types } from 'mongoose';
+
+interface IntegrationRequest {
+  _id: Types.ObjectId;
+  requestingUser: Types.ObjectId | string;
+  targetUser: Types.ObjectId | string;
+  status: string;
+  requestDate: Date;
+  responseDate?: Date;
+  landDetails: any;
+  financialAgreement: any;
+  integrationPeriod: any;
+  agreementDocument?: string;
+}
 
 interface FormattedRequest {
   _id: any;
@@ -40,7 +54,7 @@ export async function GET(request: Request) {
     }).sort({ requestDate: -1 });
 
     // Get user profiles for display names
-    const userIds = requests.map(r => 
+    const userIds = requests.map((r: IntegrationRequest) => 
       r.requestingUser.toString() === userId ? r.targetUser : r.requestingUser
     );
     

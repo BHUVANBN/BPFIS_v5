@@ -442,9 +442,9 @@ DailyAnalyticsSchema.index({ sellerId: 1, date: -1 });
 DailyAnalyticsSchema.index({ date: -1 });
 
 // Export models (reuse if already compiled)
-export const Seller = (models.Supplier as mongoose.Model<ISeller>) || model<ISeller>('Supplier', SellerSchema);
-export const Product = (models.SupplierProduct as mongoose.Model<IProduct>) || model<IProduct>('SupplierProduct', ProductSchema);
-export const InventoryLog = (models.SupplierInventoryLog as mongoose.Model<IInventoryLog>) || model<IInventoryLog>('SupplierInventoryLog', InventoryLogSchema);
-export const Order = (models.SupplierOrder as mongoose.Model<IOrder>) || model<IOrder>('SupplierOrder', OrderSchema);
-export const Review = (models.SupplierReview as mongoose.Model<IReview>) || model<IReview>('SupplierReview', ReviewSchema);
-export const DailyAnalytics = (models.SupplierDailyAnalytics as mongoose.Model<IDailyAnalytics>) || model<IDailyAnalytics>('SupplierDailyAnalytics', DailyAnalyticsSchema);
+export const Seller = models.Supplier || model<ISeller>('Supplier', SellerSchema);
+export const Product = models.SupplierProduct || model<IProduct>('SupplierProduct', ProductSchema);
+export const InventoryLog = models.SupplierInventoryLog || model<IInventoryLog>('SupplierInventoryLog', InventoryLogSchema);
+export const Order = models.SupplierOrder || model<IOrder>('SupplierOrder', OrderSchema);
+export const Review = models.SupplierReview || model<IReview>('SupplierReview', ReviewSchema);
+export const DailyAnalytics = models.SupplierDailyAnalytics || model<IDailyAnalytics>('SupplierDailyAnalytics', DailyAnalyticsSchema);

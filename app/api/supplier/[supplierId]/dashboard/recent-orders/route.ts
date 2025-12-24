@@ -3,7 +3,51 @@ import { connectDB } from '@/lib/db';
 import { Order } from '@/lib/models/supplier';
 import { FarmerOrder } from '@/lib/models/FarmerOrder';
 import { requireAuth } from '@/lib/supplier-auth-middleware';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+
+interface SupplierOrder {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  customer?: {
+    name: string;
+  };
+  totalAmount: number;
+  orderStatus: string;
+  createdAt: Date;
+  items: Array<{
+    productId: Types.ObjectId | {
+      _id: Types.ObjectId;
+      name: string;
+      sku: string;
+      images: string[];
+    };
+    quantity: number;
+    price: number;
+  }>;
+}
+
+interface FarmerOrderType {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  customerName?: string;
+  totalAmount: number;
+  status: string;
+  createdAt: Date;
+  shipping?: {
+    name: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
+  items: Array<{
+    productId: Types.ObjectId | string;
+    sellerId: Types.ObjectId | string;
+    quantity: number;
+    price: number;
+  }>;
+}
 
 export async function GET(
   request: NextRequest,
@@ -38,7 +82,7 @@ export async function GET(
 
     // Combine and format orders
     const allOrders = [
-      ...supplierOrders.map(order => ({
+      ...supplierOrders.map((order: SupplierOrder) => ({
         _id: order._id.toString(),
         orderNumber: order.orderNumber,
         customerName: order.customer?.name || 'Customer',
@@ -47,7 +91,7 @@ export async function GET(
         createdAt: order.createdAt
       })),
       ...farmerOrders
-        .map(order => {
+        .map((order: FarmerOrderType) => {
           const supplierItems = order.items.filter((item: any) => 
             item.sellerId?.toString() === sellerId || 
             item.sellerId?.toString() === sellerObjectId.toString()
@@ -76,7 +120,7 @@ export async function GET(
             createdAt: order.createdAt
           };
         })
-        .filter((order): order is NonNullable<typeof order> => order !== null)
+        .filter((order: any): order is NonNullable<typeof order> => order !== null)
     ]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, limit);

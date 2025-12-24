@@ -107,5 +107,5 @@ const FarmerProfileSchema = new Schema<IFarmerProfile>(
   { timestamps: true }
 );
 
-export const FarmerProfile: Model<IFarmerProfile> =
+export const FarmerProfile =
   mongoose.models.FarmerProfile || mongoose.model<IFarmerProfile>('FarmerProfile', FarmerProfileSchema);

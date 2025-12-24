@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import { FarmerOrder } from '@/lib/models/FarmerOrder';
-import { Seller } from '@/lib/models/supplier';
+import { FarmerOrder, IFarmerOrder } from '@/lib/models/FarmerOrder';
+import { Seller, ISeller } from '@/lib/models/supplier';
 
 export async function GET() {
   try {
@@ -14,7 +14,7 @@ export async function GET() {
     const suppliers = await Seller.find({}).select('_id companyName').limit(3);
     
     // Prepare detailed response
-    const orderDetails = allFarmerOrders.map(order => ({
+    const orderDetails = allFarmerOrders.map((order: IFarmerOrder) => ({
       orderNumber: order.orderNumber,
       status: order.status,
       createdAt: order.createdAt,
@@ -28,14 +28,14 @@ export async function GET() {
       }))
     }));
     
-    const supplierDetails = suppliers.map(supplier => ({
+    const supplierDetails = suppliers.map((supplier: ISeller) => ({
       id: supplier._id.toString(),
       companyName: supplier.companyName
     }));
     
     // Test query for each supplier
     const supplierTests = await Promise.all(
-      supplierDetails.map(async (supplier) => {
+      supplierDetails.map(async (supplier: { id: string; companyName: string }) => {
         const sellerOrders = await FarmerOrder.find({
           'items.sellerId': { $in: [supplier.id, supplier.id] }
         });
@@ -44,7 +44,7 @@ export async function GET() {
           supplierId: supplier.id,
           companyName: supplier.companyName,
           ordersFound: sellerOrders.length,
-          orderDetails: sellerOrders.map(order => ({
+          orderDetails: sellerOrders.map((order: IFarmerOrder) => ({
             orderNumber: order.orderNumber,
             matchingItems: order.items.filter((item: any) => 
               item.sellerId?.toString() === supplier.id

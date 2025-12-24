@@ -3,6 +3,26 @@ import { connectDB } from '../../../../../lib/db';
 import { LandIntegration } from '../../../../../lib/models/LandIntegration';
 import { FarmerProfile } from '../../../../../lib/models/FarmerProfile';
 import { getUserFromRequest } from '../../../../../lib/auth';
+import { Types } from 'mongoose';
+
+interface IntegrationWithDetails extends Omit<InstanceType<typeof LandIntegration>, 'requestingUser' | 'targetUser'> {
+  requestingUser: Types.ObjectId | string;
+  targetUser: Types.ObjectId | string;
+}
+
+interface AgreementDetails {
+  agreementId: Types.ObjectId;
+  otherUserName: string;
+  otherUserContact: string;
+  executionDate: Date;
+  totalLandSize: number;
+  yourLandSize: number;
+  yourContribution: number;
+  signatures?: Array<{
+    userName: string;
+    signedAt: Date;
+  }>;
+}
 
 export async function GET(request: Request) {
   try {
@@ -26,7 +46,7 @@ export async function GET(request: Request) {
 
     // Get farmer profiles for all other parties
     const agreements = await Promise.all(
-      completedIntegrations.map(async (integration) => {
+      completedIntegrations.map(async (integration: IntegrationWithDetails) => {
         const otherUserId = integration.requestingUser.toString() === userId 
           ? integration.targetUser.toString() 
           : integration.requestingUser.toString();
@@ -46,7 +66,7 @@ export async function GET(request: Request) {
           yourContribution: isRequestingUser 
             ? integration.landDetails.requestingUser.contributionRatio 
             : integration.landDetails.targetUser.contributionRatio,
-          signatures: integration.signatures?.map((sig: any) => ({
+          signatures: integration.signatures?.map((sig: { userName: string; signedAt: Date }) => ({
             userName: sig.userName,
             signedAt: sig.signedAt
           })) || [],

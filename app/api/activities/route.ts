@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ActivityLogger } from '@/lib/utils/activity-helper';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { extractTokenFromRequest, verifyAuthToken } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
@@ -43,16 +42,31 @@ export async function GET(request: Request) {
 // Handle POST request to log a new activity
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const token = extractTokenFromRequest(request);
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const user = await verifyAuthToken(token);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid or expired token' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     
     // Log the activity
     const activity = await ActivityLogger.logActivity({
       ...body,
-      userId: session?.user?.id || body.userId || 'system',
-      userEmail: session?.user?.email || body.userEmail,
-      userName: session?.user?.name || body.userName,
-      userRole: session?.user?.role || body.userRole,
+      userId: user.sub,
+      userEmail: user.email || body.userEmail,
+      userName: user.name || body.userName,
+      userRole: user.role || body.userRole,
     });
 
     return NextResponse.json(activity);

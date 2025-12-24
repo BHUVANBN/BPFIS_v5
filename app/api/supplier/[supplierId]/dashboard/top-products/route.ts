@@ -1,9 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Order, Product } from '@/lib/models/supplier';
-import { FarmerOrder } from '@/lib/models/FarmerOrder';
+import { FarmerOrder as FarmerOrderModel } from '@/lib/models/FarmerOrder';
 import { requireAuth } from '@/lib/supplier-auth-middleware';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
+
+interface FarmerOrderItem {
+  sellerId: Types.ObjectId | string | null;
+  productId: Types.ObjectId | string | null;
+  quantity: number;
+  price: number;
+}
+
+interface FarmerOrder {
+  _id: Types.ObjectId;
+  items: FarmerOrderItem[];
+  status: string;
+  createdAt: Date;
+}
+
+interface ProductStats {
+  totalSold: number;
+  totalRevenue: number;
+  orderCount: number;
+  _id?: Types.ObjectId;
+  name?: string;
+  sku?: string;
+  price?: number;
+  stockQuantity?: number;
+}
 
 export async function GET(
   request: NextRequest,
@@ -70,21 +95,26 @@ export async function GET(
     ]);
 
     // Get top products from farmer orders
-    const farmerOrders = await FarmerOrder.find({
+    const farmerOrders = await FarmerOrderModel.find({
       createdAt: { $gte: startDate },
       status: { $nin: ['cancelled'] },
       'items.sellerId': { $in: [sellerId, sellerObjectId.toString()] }
-    }).lean();
+    }).lean<FarmerOrder[]>();
 
     // Aggregate farmer order items
-    const farmerProductMap = new Map();
-    farmerOrders.forEach(order => {
-      order.items.forEach((item: any) => {
+    const farmerProductMap = new Map<string, ProductStats>();
+    farmerOrders.forEach((order: FarmerOrder) => {
+      order.items.forEach((item: FarmerOrderItem) => {
         if (item.sellerId?.toString() === sellerId || item.sellerId?.toString() === sellerObjectId.toString()) {
           const productId = item.productId?.toString();
           if (productId) {
-            const existing = farmerProductMap.get(productId) || { totalSold: 0, totalRevenue: 0, orderCount: 0 };
+            const existing = farmerProductMap.get(productId) || { 
+              totalSold: 0, 
+              totalRevenue: 0, 
+              orderCount: 0 
+            };
             farmerProductMap.set(productId, {
+              ...existing,
               totalSold: existing.totalSold + (item.quantity || 0),
               totalRevenue: existing.totalRevenue + ((item.price || 0) * (item.quantity || 0)),
               orderCount: existing.orderCount + 1
@@ -95,48 +125,36 @@ export async function GET(
     });
 
     // Combine results
-    const combinedMap = new Map();
+    const combinedMap = new Map<string, ProductStats>();
     
     // Add supplier order products
-    supplierTopProducts.forEach(product => {
-      const id = product._id.toString();
-      combinedMap.set(id, {
-        _id: product._id,
-        name: product.name,
-        sku: product.sku,
-        quantity: product.totalSold,
-        revenue: product.totalRevenue
-      });
+    supplierTopProducts.forEach((product: ProductStats) => {
+      if (product._id) {
+        combinedMap.set(product._id.toString(), product);
+      }
     });
     
-    // Add/merge farmer order products
-    for (const [productId, stats] of farmerProductMap.entries()) {
+    // Add/update with farmer order products
+    farmerProductMap.forEach((stats: ProductStats, productId: string) => {
       const existing = combinedMap.get(productId);
       if (existing) {
-        existing.quantity += stats.totalSold;
-        existing.revenue += stats.totalRevenue;
+        existing.totalSold = (existing.totalSold || 0) + (stats.totalSold || 0);
+        existing.totalRevenue = (existing.totalRevenue || 0) + (stats.totalRevenue || 0);
+        existing.orderCount = (existing.orderCount || 0) + (stats.orderCount || 0);
       } else {
-        // Try to get product details
-        try {
-          const product = await Product.findById(productId).lean();
-          if (product) {
-            combinedMap.set(productId, {
-              _id: product._id,
-              name: product.name,
-              sku: product.sku,
-              quantity: stats.totalSold,
-              revenue: stats.totalRevenue
-            });
-          }
-        } catch (e) {
-          console.error('Error fetching product:', e);
-        }
+        combinedMap.set(productId, {
+          _id: new mongoose.Types.ObjectId(productId),
+          name: 'Unknown Product',
+          totalSold: stats.totalSold || 0,
+          totalRevenue: stats.totalRevenue || 0,
+          orderCount: stats.orderCount || 0
+        });
       }
-    }
-
-    // Convert to array and sort
+    });
+    
+    // Convert to array and sort by total sold
     const topProducts = Array.from(combinedMap.values())
-      .sort((a, b) => b.quantity - a.quantity)
+      .sort((a: ProductStats, b: ProductStats) => (b.totalSold || 0) - (a.totalSold || 0))
       .slice(0, limit);
 
     return NextResponse.json({ products: topProducts });

@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { verifyAdminToken } from '@/lib/admin-auth';
 import { connectDB } from '@/lib/db';
 import { AdminAuditLog } from '@/lib/models/AdminAuditLog';
+import { Types } from 'mongoose';
+
+interface DeletionRequestLog {
+  _id: Types.ObjectId;
+  entityId: any; // Using any since it's populated with Seller document
+  details?: {
+    entityName?: string;
+    requestedBy?: string;
+    reason?: string;
+    requestedAt?: Date;
+    status?: string;
+  };
+  timestamp: Date;
+}
 
 export async function GET(request: Request) {
   try {
@@ -38,7 +52,7 @@ export async function GET(request: Request) {
         model: 'Seller'
       });
 
-    const formattedRequests = deletionRequests.map(log => ({
+    const formattedRequests = deletionRequests.map((log: DeletionRequestLog) => ({
       _id: log._id,
       supplierId: log.entityId,
       supplierName: log.details?.entityName || 'Unknown',

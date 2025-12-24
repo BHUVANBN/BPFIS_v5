@@ -1,9 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import { Review } from '@/lib/models/supplier';
+import { Review as SupplierReviewModel, Product as ProductModel } from '@/lib/models/supplier';
 import { MarketplaceReview } from '@/lib/models/marketplace-review';
-import { Product } from '@/lib/models/supplier';
 import { requireAuth } from '@/lib/supplier-auth-middleware';
+import { Types } from 'mongoose';
+
+interface FormattedReview {
+  _id: any;
+  type: 'supplier' | 'farmer';
+  rating: number;
+  comment?: string;
+  images: string[];
+  status: string;
+  product: {
+    name: string;
+    sku: string;
+  } | null;
+  order: {
+    orderNumber: string;
+  } | null;
+  createdAt: Date;
+}
+
+interface Product {
+  _id: Types.ObjectId;
+  [key: string]: any; // For any additional properties
+}
+
+interface MarketplaceReview {
+  _id: Types.ObjectId;
+  rating: number;
+  comment?: string;
+  images?: string[];
+  status: string;
+  createdAt: Date;
+  productId: Types.ObjectId | { name: string; sku: string };
+  orderId: Types.ObjectId | { orderNumber: string };
+  product?: {
+    name: string;
+    sku: string;
+  };
+  order?: {
+    orderNumber: string;
+  };
+}
 
 // GET /api/supplier/[supplierId]/reviews - Get supplier reviews
 export async function GET(
@@ -28,13 +68,13 @@ export async function GET(
     const skip = (page - 1) * limit;
     
     // Get supplier's products to find farmer reviews
-    const supplierProducts = await Product.find({ sellerId: sellerId as any }).select('_id').lean();
-    const productIds = supplierProducts.map(p => p._id.toString());
+    const supplierProducts = await ProductModel.find({ sellerId: sellerId as any }).select('_id').lean<Product[]>();
+    const productIds = supplierProducts.map((p: Product) => p._id.toString());
     
     // Get both supplier reviews and farmer marketplace reviews
     const [supplierReviews, farmerReviews] = await Promise.all([
       // Get traditional supplier reviews
-      Review.find({ sellerId: sellerId as any })
+      SupplierReviewModel.find({ sellerId: sellerId as any })
         .populate('productId', 'name sku')
         .populate('orderId', 'orderNumber')
         .sort({ createdAt: -1 })
@@ -45,56 +85,73 @@ export async function GET(
         productId: { $in: productIds },
         status: 'approved'
       })
+        .populate('productId', 'name sku')
+        .populate('orderId', 'orderNumber')
         .sort({ createdAt: -1 })
         .lean()
     ]);
     
-    // Combine and format reviews
-    const allReviews = [
-      ...supplierReviews.map(review => ({
-        ...review,
-        reviewType: 'supplier',
-        customerName: review.customerName || 'Customer',
-        rating: review.rating,
-        title: review.title,
-        body: (review as any).body || (review as any).comment,
-        helpful: (review as any).helpful || 0,
-        verified: (review as any).verified || false,
-        sellerResponse: (review as any).sellerResponse,
-        isFlagged: (review as any).isFlagged || false,
-        sentiment: (review as any).sentiment || 'neutral'
-      })),
-      ...farmerReviews.map(review => ({
-        ...review,
-        reviewType: 'marketplace',
-        customerName: (review as any).userName || 'Farmer',
-        rating: review.rating,
-        title: review.title,
-        body: (review as any).comment,
-        helpful: (review as any).helpful || 0,
-        verified: (review as any).verified || false,
-        sellerResponse: review.sellerResponse,
-        isFlagged: false,
-        sentiment: 'neutral'
-      }))
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Format supplier reviews
+    const formattedSupplierReviews = supplierReviews.map((review: any): FormattedReview => ({
+      _id: review._id,
+      type: 'supplier',
+      rating: review.rating,
+      comment: review.comment || review.body,
+      images: review.images || [],
+      status: review.status,
+      product: review.productId ? {
+        name: review.productId.name || '',
+        sku: review.productId.sku || ''
+      } : null,
+      order: review.orderId ? {
+        orderNumber: review.orderId.orderNumber || ''
+      } : null,
+      createdAt: review.createdAt
+    }));
+
+    // Format farmer reviews
+    const formattedFarmerReviews = farmerReviews.map((review: any): FormattedReview => ({
+      _id: review._id,
+      type: 'farmer',
+      rating: review.rating,
+      comment: review.comment || review.body,
+      images: review.images || [],
+      status: review.status,
+      product: review.productId ? {
+        name: review.productId.name || '',
+        sku: review.productId.sku || ''
+      } : null,
+      order: review.orderId ? {
+        orderNumber: review.orderId.orderNumber || ''
+      } : null,
+      createdAt: review.createdAt
+    }));
+
+    // Combine reviews
+    const allReviews = [...formattedSupplierReviews, ...formattedFarmerReviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
     // Apply filters
     let filteredReviews = allReviews;
     
-    if (sentiment && sentiment !== 'all') {
-      filteredReviews = filteredReviews.filter(review => review.sentiment === sentiment);
+    if (sentiment) {
+      filteredReviews = filteredReviews.filter(review => {
+        if (sentiment === 'positive') return review.rating >= 4;
+        if (sentiment === 'negative') return review.rating <= 2;
+        return review.rating === 3;
+      });
     }
     
     if (flagged) {
-      filteredReviews = filteredReviews.filter(review => review.isFlagged);
+      filteredReviews = filteredReviews.filter(review => review.status === 'flagged');
     }
     
     if (search) {
+      const searchLower = search.toLowerCase();
       filteredReviews = filteredReviews.filter(review => 
-        review.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-        review.title?.toLowerCase().includes(search.toLowerCase()) ||
-        review.body?.toLowerCase().includes(search.toLowerCase())
+        (review.comment?.toLowerCase() || '').includes(searchLower) ||
+        (review.product?.name?.toLowerCase() || '').includes(searchLower) ||
+        (review.product?.sku?.toLowerCase() || '').includes(searchLower) ||
+        (review.order?.orderNumber?.toLowerCase() || '').includes(searchLower)
       );
     }
     
@@ -104,12 +161,28 @@ export async function GET(
     
     // Get sentiment statistics for both review types
     const [supplierSentimentStats, farmerSentimentStats] = await Promise.all([
-      Review.aggregate([
+      SupplierReviewModel.aggregate([
         { $match: { sellerId } },
         {
           $group: {
-            _id: '$sentiment',
-            count: { $sum: 1 }
+            _id: null,
+            total: { $sum: 1 },
+            averageRating: { $avg: "$rating" },
+            positive: {
+              $sum: {
+                $cond: [{ $gte: ["$rating", 4] }, 1, 0]
+              }
+            },
+            neutral: {
+              $sum: {
+                $cond: [{ $eq: ["$rating", 3] }, 1, 0]
+              }
+            },
+            negative: {
+              $sum: {
+                $cond: [{ $lte: ["$rating", 2] }, 1, 0]
+              }
+            }
           }
         }
       ]),
@@ -125,7 +198,7 @@ export async function GET(
     ]);
     
     // Get flagged count (only supplier reviews can be flagged)
-    const flaggedCount = await Review.countDocuments({ sellerId: sellerId as any, isFlagged: true });
+    const flaggedCount = await SupplierReviewModel.countDocuments({ sellerId: sellerId as any, isFlagged: true });
     
     // Combine sentiment stats
     const combinedSentimentStats = [

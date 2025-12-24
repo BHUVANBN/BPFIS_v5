@@ -3,6 +3,16 @@ import { verifyAdminToken } from '@/lib/admin-auth';
 import { connectDB } from '@/lib/db';
 import { Seller } from '@/lib/models/supplier';
 import { Product } from '@/lib/models';
+import { Types } from 'mongoose';
+
+interface DeletionRequest {
+  _id: Types.ObjectId;
+  details?: {
+    reason?: string;
+    requestedBy?: string;
+    requestedAt?: Date;
+  };
+}
 import { Order } from '@/lib/models/order';
 import { Cart } from '@/lib/models/Cart';
 import { FarmerOrder } from '@/lib/models/FarmerOrder';
@@ -213,7 +223,7 @@ export async function GET(
           orders: orderCount,
           farmerOrders: farmerOrderCount
         },
-        deletionRequests: deletionRequests.map(req => ({
+        deletionRequests: deletionRequests.map((req: DeletionRequest) => ({
           id: req._id,
           reason: req.details?.reason,
           requestedBy: req.details?.requestedBy,

@@ -52,4 +52,4 @@ MarketplaceReviewSchema.index({ userId: 1, productId: 1 });
 MarketplaceReviewSchema.index({ createdAt: -1 });
 MarketplaceReviewSchema.index({ rating: 1 });
 
-export const MarketplaceReview = (models.MarketplaceReview as mongoose.Model<IMarketplaceReview>) || model<IMarketplaceReview>('MarketplaceReview', MarketplaceReviewSchema);
+export const MarketplaceReview = models.MarketplaceReview || model<IMarketplaceReview>('MarketplaceReview', MarketplaceReviewSchema);

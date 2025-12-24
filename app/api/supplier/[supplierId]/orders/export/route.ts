@@ -80,7 +80,7 @@ export async function GET(
     
     const csvContent = [
       csvHeaders.join(','),
-      ...csvRows.map(row => row.join(','))
+      ...csvRows.map((row: string[]) => row.join(','))
     ].join('\n');
     
     // Set appropriate headers for CSV download

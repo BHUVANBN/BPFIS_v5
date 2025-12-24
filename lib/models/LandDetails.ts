@@ -101,5 +101,5 @@ LandDetailsSchema.index({ userId: 1 });
 LandDetailsSchema.index({ user: 1 });
 LandDetailsSchema.index({ 'rtcDetails.surveyNumber': 1 });
 
-export const LandDetails: Model<ILandDetails> =
+export const LandDetails =
   mongoose.models.LandDetails || mongoose.model<ILandDetails>('LandDetails', LandDetailsSchema);

@@ -16,9 +16,9 @@ export interface ClientInfo {
 
 // For Next.js API routes
 export function getClientInfoFromRequest(req: NextRequest): ClientInfo {
-  const ip = req.ip || 
-             req.headers.get('x-real-ip') || 
-             req.headers.get('x-forwarded-for')?.split(',')[0] || 
+  const ip = req.headers.get('x-real-ip') ||
+             req.headers.get('x-forwarded-for')?.split(',')[0] ||
+             req.headers.get('x-client-ip') ||
              '127.0.0.1';
   
   return {

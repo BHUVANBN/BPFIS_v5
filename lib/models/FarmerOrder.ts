@@ -89,6 +89,6 @@ const FarmerOrderSchema = new Schema<IFarmerOrder>({
 FarmerOrderSchema.index({ user: 1, createdAt: -1 });
 FarmerOrderSchema.index({ userId: 1, createdAt: -1 });
 
-export const FarmerOrder: Model<IFarmerOrder> =
-  (mongoose.models.FarmerOrder as Model<IFarmerOrder>) ||
+export const FarmerOrder =
+  mongoose.models.FarmerOrder ||
   mongoose.model<IFarmerOrder>('FarmerOrder', FarmerOrderSchema);

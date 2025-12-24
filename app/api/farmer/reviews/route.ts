@@ -3,6 +3,26 @@ import { connectDB } from '@/lib/db';
 import '@/lib/models'; // Ensure all models are registered
 import { MarketplaceReview } from '@/lib/models/marketplace-review';
 import { FarmerOrder } from '@/lib/models/FarmerOrder';
+import { Types } from 'mongoose';
+
+interface IMarketplaceReview {
+  _id: Types.ObjectId;
+  orderId: string | Types.ObjectId;
+  productId: string | Types.ObjectId;
+  rating: number;
+  title?: string;
+  comment?: string;
+  images?: string[];
+  helpful?: number;
+  verified?: boolean;
+  sellerResponse?: {
+    comment: string;
+    respondedAt: Date;
+  };
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+}
 import mongoose from 'mongoose';
 
 export async function POST(req: Request) {
@@ -110,7 +130,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       message: 'Reviews fetched successfully',
       data: {
-        reviews: reviews.map(review => ({
+        reviews: reviews.map((review: IMarketplaceReview) => ({
           id: review._id,
           orderId: review.orderId,
           productId: review.productId,

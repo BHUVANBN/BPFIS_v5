@@ -1,8 +1,8 @@
-import { Model, Document, Schema, Query, DocumentDefinition, FilterQuery, UpdateQuery } from 'mongoose';
+import { Model, Document, Schema, Query } from 'mongoose';
 import { AdminAuditLog, ActivityAction, ResourceType, ActivityStatus, IAdminAuditLog } from '@/lib/models/AdminAuditLog';
 import { getClientInfo } from '@/lib/utils/client-info';
 
-export interface TrackedModel<T extends Document> extends Model<T> {
+export interface TrackedModel<T = any> {
   trackChanges?: boolean;
   resourceType?: ResourceType | string;
   getResourceName?: (doc: T) => string;
@@ -25,11 +25,11 @@ interface QueryResult {
   };
 }
 
-export function trackModelChanges<T extends Document>(
-  model: TrackedModel<T>,
+export function trackModelChanges(
+  model: any,
   options: {
     resourceType: ResourceType | string;
-    getResourceName?: (doc: T) => string;
+    getResourceName?: (doc: any) => string;
   }
 ): void {
   model.trackChanges = true;
@@ -37,7 +37,7 @@ export function trackModelChanges<T extends Document>(
   model.getResourceName = options.getResourceName;
 
   // Track document saves (create/update)
-  model.schema.post<T>('save', async function(doc: T) {
+  model.schema.post('save', async function(doc: any) {
     if (!model.trackChanges) return;
     
     const typedDoc = doc as unknown as ModifiedDocument;
@@ -88,7 +88,7 @@ export function trackModelChanges<T extends Document>(
   });
 
   // Track document deletes
-  model.schema.post<T>('remove', async function(doc: T) {
+  model.schema.post('remove', async function(doc: any) {
     if (!model.trackChanges) return;
     
     const typedDoc = doc as unknown as ModifiedDocument;

@@ -6,6 +6,16 @@ import { LandDetails } from '@/lib/models/LandDetails';
 import { LandIntegration } from '@/lib/models/LandIntegration';
 import mongoose from 'mongoose';
 
+// Type for farmer check results
+interface FarmerCheckResult {
+  userExists: boolean;
+  userName: string;
+  farmerProfile: boolean;
+  landDetails: boolean;
+  landIntegrations: boolean;
+  totalData: number;
+}
+
 export async function GET() {
   try {
     await connectDB();
@@ -20,7 +30,7 @@ export async function GET() {
       '692d5d9da2dbe5b5fa76382d'
     ];
     
-    const results = {};
+    const results: Record<string, FarmerCheckResult> = {};
     
     for (const farmerId of farmersWithData) {
       const [userExists, profileCount, landCount, integrationCount] = await Promise.all([

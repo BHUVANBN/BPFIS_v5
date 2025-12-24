@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Seller } from '@/lib/models/supplier';
 import { Order } from '@/lib/models/supplier';
+import { Types } from 'mongoose';
+
+interface SupplierType {
+  _id: Types.ObjectId;
+  name?: string;
+  email: string;
+  phone?: string;
+  companyName?: string;
+  gstNumber?: string;
+  verificationStatus?: string;
+  createdAt: Date;
+  documents?: any[];
+  // Add other fields as needed
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +48,7 @@ export async function GET(request: NextRequest) {
     
     // Get products count and revenue for each supplier
     const suppliersWithStats = await Promise.all(
-      suppliers.map(async (supplier) => {
+      suppliers.map(async (supplier: SupplierType) => {
         const productsCount = await require('@/lib/models/supplier').Product.countDocuments({ 
           sellerId: supplier._id 
         });

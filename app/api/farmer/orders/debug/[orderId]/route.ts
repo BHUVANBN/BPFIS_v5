@@ -1,7 +1,20 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import { FarmerOrder } from '@/lib/models/FarmerOrder'
-import mongoose from 'mongoose'
+import mongoose, { Document, Types } from 'mongoose'
+
+interface IFarmerOrder extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId | string;
+  user?: Types.ObjectId | string;
+  orderNumber: string;
+  [key: string]: any; // For any additional dynamic properties
+}
+
+interface OrderIdInfo {
+  _id: Types.ObjectId;
+  orderNumber: string;
+}
 
 export async function GET(req: Request, { params }: { params: Promise<{ orderId: string }> }) {
   try {
@@ -17,10 +30,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
       $or: [{ userId }, { user: userId }]
     }).lean()
 
-    const orderIds = allUserOrders.map(o => ({ _id: o._id, orderNumber: o.orderNumber }))
+    const orderIds: OrderIdInfo[] = allUserOrders.map((o: IFarmerOrder) => ({
+      _id: o._id,
+      orderNumber: o.orderNumber
+    }));
     
     // Find the specific order
-    const order = allUserOrders.find(o => {
+    const order = allUserOrders.find((o: IFarmerOrder) => {
       const orderIdStr = o._id.toString()
       const matches = orderIdStr === orderId
       console.log(`Comparing: "${orderIdStr}" with "${orderId}" -> ${matches}`)

@@ -48,4 +48,4 @@ const MarketplaceAddressSchema = new Schema<IMarketplaceAddress>({
 MarketplaceAddressSchema.index({ userId: 1, isDefault: 1 });
 MarketplaceAddressSchema.index({ userId: 1, type: 1 });
 
-export const MarketplaceAddress = (models.MarketplaceAddress as mongoose.Model<IMarketplaceAddress>) || model<IMarketplaceAddress>('MarketplaceAddress', MarketplaceAddressSchema);
+export const MarketplaceAddress = models.MarketplaceAddress || model<IMarketplaceAddress>('MarketplaceAddress', MarketplaceAddressSchema);

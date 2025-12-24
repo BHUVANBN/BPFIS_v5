@@ -3,6 +3,17 @@ import { connectDB } from '@/lib/db';
 import { Seller } from '@/lib/models/supplier';
 import { Product } from '@/lib/models/supplier';
 import { Order } from '@/lib/models/supplier';
+import { Types } from 'mongoose';
+
+interface SupplierType {
+  _id: Types.ObjectId;
+  companyName?: string;
+  email: string;
+  phone?: string;
+  verificationStatus?: string;
+  createdAt: Date;
+  // Add other fields as needed
+}
 
 export async function GET() {
   try {
@@ -16,7 +27,7 @@ export async function GET() {
     
     // Get additional stats for each supplier
     const suppliersWithStats = await Promise.all(
-      suppliers.map(async (supplier) => {
+      suppliers.map(async (supplier: SupplierType) => {
         const productsCount = await Product.countDocuments({ 
           sellerId: supplier._id as any 
         });

@@ -87,4 +87,4 @@ MarketplaceReturnSchema.index({ userId: 1, status: 1 });
 MarketplaceReturnSchema.index({ orderId: 1 });
 MarketplaceReturnSchema.index({ createdAt: -1 });
 
-export const MarketplaceReturn = (models.MarketplaceReturn as mongoose.Model<IMarketplaceReturn>) || model<IMarketplaceReturn>('MarketplaceReturn', MarketplaceReturnSchema);
+export const MarketplaceReturn = models.MarketplaceReturn || model<IMarketplaceReturn>('MarketplaceReturn', MarketplaceReturnSchema);

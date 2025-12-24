@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import { FarmerOrder } from '@/lib/models/FarmerOrder'
-import mongoose from 'mongoose'
+import mongoose, { Document, Types } from 'mongoose'
+
+interface IFarmerOrder extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId | string;
+  user?: Types.ObjectId | string;
+  orderNumber: string;
+  status: string;
+  // Add other fields as needed
+  [key: string]: any; // For any additional dynamic properties
+}
 
 // Order details API with realistic status tracking
 export async function GET(req: Request, { params }: { params: Promise<{ orderId: string }> }) {
@@ -33,7 +43,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
     
     console.log(`Found ${allUserOrders.length} orders for user`)
     
-    const order = allUserOrders.find(o => {
+    const order = allUserOrders.find((o: IFarmerOrder) => {
       const orderIdStr = o._id.toString()
       const matches = orderIdStr === orderId
       console.log(`Comparing: "${orderIdStr}" with "${orderId}" -> ${matches}`)
@@ -155,7 +165,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ orderId
       $or: [{ userId }, { user: userId }]
     }).lean()
     
-    const order = allUserOrders.find(o => o._id.toString() === orderId)
+    const order = allUserOrders.find((o: IFarmerOrder) => o._id.toString() === orderId)
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })

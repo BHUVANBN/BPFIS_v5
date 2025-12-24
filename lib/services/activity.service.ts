@@ -101,13 +101,13 @@ export class ActivityService {
 
 // Auto-logging middleware for Mongoose schemas
 export function withActivityLogging<T extends Document>(
-  model: Model<T>,
+  model: any,
   resourceType: string
 ) {
   const modelName = model.modelName;
 
   // Log after document is saved
-  model.schema.post('save', async function (doc) {
+  model.schema.post('save', async function (this: any, doc: any) {
     const action = this.isNew ? 'create' : 'update';
     
     await ActivityService.logActivity({
@@ -121,7 +121,7 @@ export function withActivityLogging<T extends Document>(
   });
 
   // Log before document is removed
-  model.schema.pre('remove', async function (next) {
+  model.schema.pre('remove', async function (this: any, next: any) {
     try {
       await ActivityService.logActivity({
         userId: this.userId || this.createdBy,

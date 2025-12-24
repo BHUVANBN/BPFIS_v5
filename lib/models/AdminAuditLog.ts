@@ -84,7 +84,7 @@ export interface IAdminAuditLog extends Document {
   generateMessage(): string;
 }
 
-interface IAdminAuditLogModel extends Model<IAdminAuditLog> {
+interface IAdminAuditLogModel {
   logActivity(activity: Partial<IAdminAuditLog>): Promise<IAdminAuditLog>;
 }
 
@@ -222,7 +222,7 @@ AdminAuditLogSchema.methods.generateMessage = function(this: IAdminAuditLog): st
 };
 
 // Static method to log a new activity
-AdminAuditLogSchema.static('logActivity', async function(activity: Partial<IAdminAuditLog>): Promise<IAdminAuditLog> {
+AdminAuditLogSchema.static('logActivity', async function(this: any, activity: Partial<IAdminAuditLog>): Promise<IAdminAuditLog> {
   try {
     const { getClientInfo } = await import('@/lib/utils/client-info');
     const clientInfo = await getClientInfo();
@@ -243,8 +243,8 @@ AdminAuditLogSchema.static('logActivity', async function(activity: Partial<IAdmi
 });
 
 // Create and export the model
-const AdminAuditLog = mongoose.models.AdminAuditLog as IAdminAuditLogModel || 
-                     mongoose.model<IAdminAuditLog, IAdminAuditLogModel>('AdminAuditLog', AdminAuditLogSchema);
+const AdminAuditLog = mongoose.models.AdminAuditLog ||
+                     mongoose.model<IAdminAuditLog>('AdminAuditLog', AdminAuditLogSchema);
 
 export { AdminAuditLog };
 export default AdminAuditLog;
