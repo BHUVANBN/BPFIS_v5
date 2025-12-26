@@ -32,7 +32,7 @@ export default function Hero() {
             className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
             style={{
               backgroundImage: `url('${image}')`,
-              filter: 'blur(2px)',
+              filter: 'blur(2px) contrast(1.2) brightness(0.8)',
               opacity: currentImageIndex === index ? 1 : 0
             }}
           />
